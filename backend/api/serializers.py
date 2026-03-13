@@ -4,12 +4,10 @@ from rest_framework import serializers
 
 class UserSerializer(serializers.ModelSerializer):
     phone_number = serializers.CharField(required=False, allow_blank=True)
-    description = serializers.CharField(required=False, allow_blank=True)
-    teaching_module = serializers.CharField(required=False, allow_blank=True)
 
     class Meta:
         model = User
-        fields = ["id", "username", "password", "email", "role", "phone_number", "description", "teaching_module"]
+        fields = ["id", "first_name", "last_name", "username", "password", "email", "role", "phone_number"]
         extra_kwargs = {
             "password": {"write_only": True},
             "role": {"required": False} 
