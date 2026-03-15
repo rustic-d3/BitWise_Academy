@@ -4,18 +4,15 @@ import api from "../api";
 import { REFRESH_TOKEN, ACCESS_TOKEN } from "../constants";
 import { useState, useEffect, type ReactNode } from "react";
 
-// 1. Tell TypeScript that 'children' is a React component/element
 interface ProtectedRouteProps {
   children: ReactNode;
 }
 
-// 2. Define what is inside a JWT token so we can access .exp
 interface JwtPayload {
   exp: number;
 }
 
 function ProtectedRoute({ children }: ProtectedRouteProps) {
-  // 3. Define that state can be boolean OR null (for loading)
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -25,7 +22,6 @@ function ProtectedRoute({ children }: ProtectedRouteProps) {
   const refreshToken = async () => {
     const refresh = localStorage.getItem(REFRESH_TOKEN);
     try {
-      // Using your api instance
       const res = await api.post("/api/token/refresh/", { refresh });
 
       if (res.status === 200) {
@@ -47,7 +43,6 @@ function ProtectedRoute({ children }: ProtectedRouteProps) {
       return;
     }
 
-    // 4. Tell jwtDecode to treat the result like our JwtPayload interface
     const decoded = jwtDecode<JwtPayload>(token);
     const tokenExpiration = decoded.exp;
     const now = Date.now() / 1000;

@@ -1,0 +1,9 @@
+@import "tailwindcss";
+
+@layer components {
+  .input-field {
+    @apply border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-700
+           w-full outline-none focus:ring-2 focus:ring-[#df204c]
+           focus:border-transparent transition;
+  }
+}
