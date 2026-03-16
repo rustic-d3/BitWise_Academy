@@ -14,11 +14,12 @@ class User(AbstractUser):
 
     role = models.CharField(max_length=10, choices=Role.choices, default=Role.PARENT)
 
-class Teacher(User):
+class TeacherProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="teacher_profile")
     description = models.TextField(max_length=200, null=True, blank=True)
     teaching_module = models.CharField(
-        max_length=50, 
-        choices=Module.choices, 
+        max_length=50,
+        choices=Module.choices,
         null=True,
         blank=True
     )
@@ -27,17 +28,16 @@ class Teacher(User):
         verbose_name = "Teacher"
         verbose_name_plural = "Teachers"
 
-    def save(self, *args, **kwargs):
-        self.role = User.Role.TEACHER
-        super().save(*args, **kwargs)
+    def __str__(self):
+        return f"{self.user.username} - Teacher"
 
-class Parent(User):
-    phone_number = models.CharField(max_length=20)
+class ParentProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="parent_profile")
+    phone_number = models.CharField(max_length=20, null=True, blank=True)
 
     class Meta:
         verbose_name = "Parent"
         verbose_name_plural = "Parents"
 
-    def save(self, *args, **kwargs):
-        self.role = User.Role.PARENT
-        super().save(*args, **kwargs)
+    def __str__(self):
+        return f"{self.user.username} - Parent"

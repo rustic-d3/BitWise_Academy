@@ -1,6 +1,7 @@
-from api.models import User, Teacher, Parent
+from api.models import User, TeacherProfile, ParentProfile
 from rest_framework import serializers
 from django.core.validators import RegexValidator
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 
 class UserSerializer(serializers.ModelSerializer):    
@@ -38,20 +39,22 @@ class UserSerializer(serializers.ModelSerializer):
             role = User.Role.PARENT
 
         phone_number = validated_data.pop('phone_number', None)
-        description = validated_data.pop('description', None)
-        teaching_module = validated_data.pop('teaching_module', None)
+        validated_data.pop('description', None)
+        validated_data.pop('teaching_module', None)
+
+
+        user = User.objects.create_user(**validated_data)
+
 
         if role == User.Role.TEACHER:
-            return Teacher.objects.create_user(
-                description=description, 
-                teaching_module=teaching_module, 
-                **validated_data
-            )
-        elif role == User.Role.PARENT:
-            return Parent.objects.create_user(
-                phone_number=phone_number, 
-                **validated_data
-            )
+            user.role = User.Role.TEACHER
+            user.save()
+            TeacherProfile.objects.create(user=user)
+        else:
+            ParentProfile.objects.create(user=user, phone_number=phone_number)
+
+        return user
+
     def update(self, instance, validated_data):
         request = self.context.get('request')
         
@@ -60,14 +63,17 @@ class UserSerializer(serializers.ModelSerializer):
                 validated_data.pop('role')
         
         return super().update(instance, validated_data)  
+
     def validate_username(self, value):
         if User.objects.filter(username=value).exists():
             raise serializers.ValidationError("This username is already in use.")
-        return value;
+        return value
+
     def validate_email(self, value):
         if User.objects.filter(email=value).exists():
             raise serializers.ValidationError("This email is already in use.")
         return value
+
     def validate_password(self, value):
         if not any(char.isdigit() for char in value):
             raise serializers.ValidationError("Password must contain at least one number.")
@@ -76,6 +82,14 @@ class UserSerializer(serializers.ModelSerializer):
         return value
     
     def validate_phone_number(self, value):
-        if value and Parent.objects.filter(phone_number=value).exists():
+        if value and ParentProfile.objects.filter(phone_number=value).exists():
             raise serializers.ValidationError("This phone number is already in use.")
         return value
+    
+    
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        token["role"] = user.role  
+        return token
