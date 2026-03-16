@@ -17,11 +17,47 @@ export default function Form({ form_type, route }: FormProps) {
     email: "",
     password: "",
   });
+  const [validationErrors, setValidationErrors] = useState({
+    firstNameError: "",
+    lastNameError: "",
+    usernameError: "",
+    emailError: "",
+    phoneNumberError: "",
+    passwordError: "",
+  });
+  function validateForm() {
+    const errors = {
+      firstNameError: "",
+      lastNameError: "",
+      usernameError: "",
+      emailError: "",
+      phoneNumberError: "",
+      passwordError: "",
+    };
 
+    if (!formData.first_name.trim())
+      errors.firstNameError = "First name can't be empty";
+    if (!formData.last_name.trim())
+      errors.lastNameError = "Last name can't be empty";
+    if (!formData.username.trim())
+      errors.usernameError = "Username can't be empty";
+    if (!formData.email.trim()) errors.emailError = "Email can't be empty";
+    else if (!/\S+@\S+\.\S+/.test(formData.email))
+      errors.emailError = "Invalid email format";
+    if (!formData.phone_number.trim())
+      errors.phoneNumberError = "Phone number can't be empty";
+    else if (!/^\+?[\d]{9,15}$/.test(formData.phone_number))
+      errors.phoneNumberError = "Invalid phone number";
+    if (!formData.password.trim())
+      errors.passwordError = "Password can't be empty";
+    else if (formData.password.length < 8)
+      errors.passwordError = "Password must be at least 8 characters";
+
+    setValidationErrors(errors);
+    return !Object.values(errors).some(Boolean);
+  }
   async function handleSubmit() {
-    console.log(route);
-    console.log(formData);
-
+    if (isRegister && !validateForm()) return;
     const loginData = {
       username: formData.username,
       password: formData.password,
@@ -31,7 +67,6 @@ export default function Form({ form_type, route }: FormProps) {
 
     try {
       const res = await api.post(route, data_to_send);
-      console.log(res.data);
 
       if (form_type == "login") {
         localStorage.setItem("access", res.data.access);
@@ -40,8 +75,17 @@ export default function Form({ form_type, route }: FormProps) {
       } else {
         navigate("/login");
       }
-    } catch (error) {
-      alert(error);
+    } catch (error: any) {
+      const data = error.response?.data;
+      setValidationErrors((prev) => ({
+        ...prev,
+        usernameError: data?.username?.[0] || "",
+        emailError: data?.email?.[0] || "",
+        passwordError: data?.password?.[0] || "",
+        phoneNumberError: data?.phone_number?.[0] || "",
+        firstNameError: data?.first_name?.[0] || "",
+        lastNameError: data?.last_name?.[0] || "",
+      }));
     }
   }
 
@@ -60,55 +104,96 @@ export default function Form({ form_type, route }: FormProps) {
       <form className="flex flex-col gap-4">
         {isRegister && (
           <div className="flex gap-4">
+            <div className="flex flex-col flex-1">
+              <input
+                placeholder="First Name"
+                value={formData.first_name}
+                onChange={(e) => updateField("first_name", e.target.value)}
+                className="input-field"
+              />
+              {validationErrors.firstNameError && (
+                <p className="text-red-500 text-sm">
+                  {validationErrors.firstNameError}
+                </p>
+              )}
+            </div>
+            <div className="flex flex-col flex-1">
+              <input
+                placeholder="Last Name"
+                value={formData.last_name}
+                onChange={(e) => updateField("last_name", e.target.value)}
+                className="input-field"
+              />
+              {validationErrors.lastNameError && (
+                <p className="text-red-500 text-sm">
+                  {validationErrors.lastNameError}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+        <div>
+          <input
+            placeholder="Username"
+            value={formData.username}
+            onChange={(e) => updateField("username", e.target.value)}
+            className="input-field"
+          />
+          {validationErrors.usernameError && (
+            <p className="text-red-500 text-sm">
+              {validationErrors.usernameError}
+            </p>
+          )}
+        </div>
+
+        {isRegister && (
+          <div>
             <input
-              placeholder="First Name"
-              value={formData.first_name}
-              onChange={(e) => updateField("first_name", e.target.value)}
-              className="input-field flex-1"
+              type="email"
+              placeholder="Email"
+              value={formData.email}
+              onChange={(e) => updateField("email", e.target.value)}
+              className="input-field"
             />
-            <input
-              placeholder="Last Name"
-              value={formData.last_name}
-              onChange={(e) => updateField("last_name", e.target.value)}
-              className="input-field flex-1"
-            />
+            {validationErrors.emailError && (
+              <p className="text-red-500 text-sm">
+                {validationErrors.emailError}
+              </p>
+            )}
           </div>
         )}
 
-        <input
-          placeholder="Username"
-          value={formData.username}
-          onChange={(e) => updateField("username", e.target.value)}
-          className="input-field"
-        />
-
         {isRegister && (
+          <div>
+            <input
+              type="text"
+              placeholder="Phone Number"
+              value={formData.phone_number}
+              onChange={(e) => updateField("phone_number", e.target.value)}
+              className="input-field"
+            />
+            {validationErrors.phoneNumberError && (
+              <p className="text-red-500 text-sm">
+                {validationErrors.phoneNumberError}
+              </p>
+            )}
+          </div>
+        )}
+        <div>
           <input
-            type="email"
-            placeholder="Email"
-            value={formData.email}
-            onChange={(e) => updateField("email", e.target.value)}
+            type="password"
+            placeholder="Password"
+            value={formData.password}
+            onChange={(e) => updateField("password", e.target.value)}
             className="input-field"
           />
-        )}
 
-        {isRegister && (
-          <input
-            type="text"
-            placeholder="Phone Number"
-            value={formData.phone_number}
-            onChange={(e) => updateField("phone_number", e.target.value)}
-            className="input-field"
-          />
-        )}
-
-        <input
-          type="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={(e) => updateField("password", e.target.value)}
-          className="input-field"
-        />
+          {validationErrors.passwordError && (
+            <p className="text-red-500 text-sm">
+              {validationErrors.passwordError}
+            </p>
+          )}
+        </div>
 
         <button
           type="button"

@@ -3,9 +3,7 @@ from rest_framework import serializers
 from django.core.validators import RegexValidator
 
 
-class UserSerializer(serializers.ModelSerializer):
-    phone_number = serializers.CharField(required=False, allow_blank=True)
-    
+class UserSerializer(serializers.ModelSerializer):    
     phone_number = serializers.CharField(
         required=False,
         allow_blank=True,
@@ -29,8 +27,7 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ["id", "first_name", "last_name", "username", "password", "email", "role", "phone_number"]
         extra_kwargs = {
-            "password": {"write_only": True},
-            "role": {"required": False} 
+            "role": {"required": False}, 
         }
 
     def create(self, validated_data):
@@ -62,20 +59,23 @@ class UserSerializer(serializers.ModelSerializer):
             if not request.user.is_superuser:
                 validated_data.pop('role')
         
-        return super().update(instance, validated_data)    
+        return super().update(instance, validated_data)  
+    def validate_username(self, value):
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError("This username is already in use.")
+        return value;
     def validate_email(self, value):
         if User.objects.filter(email=value).exists():
             raise serializers.ValidationError("This email is already in use.")
         return value
-
     def validate_password(self, value):
         if not any(char.isdigit() for char in value):
             raise serializers.ValidationError("Password must contain at least one number.")
         if not any(char.isupper() for char in value):
             raise serializers.ValidationError("Password must contain at least one uppercase letter.")
         return value
-
+    
     def validate_phone_number(self, value):
-        if value and User.objects.filter(phone_number=value).exists():
+        if value and Parent.objects.filter(phone_number=value).exists():
             raise serializers.ValidationError("This phone number is already in use.")
         return value
