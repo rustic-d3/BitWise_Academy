@@ -194,6 +194,22 @@ export default function Form({ form_type, route }: FormProps) {
             </p>
           )}
         </div>
+        {isRegister && (
+          <p className="text-sm">
+            Already have an account?{" "}
+            <a className="text-red-500 text-sm" href="/login">
+              Log In here!
+            </a>
+          </p>
+        )}
+        {!isRegister && (
+          <p className="text-sm">
+            Don't have an account?{" "}
+            <a className="text-red-500 text-sm" href="/register">
+              Register here!
+            </a>
+          </p>
+        )}
 
         <button
           type="button"
