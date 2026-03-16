@@ -1,9 +1,29 @@
 from api.models import User, Teacher, Parent
 from rest_framework import serializers
+from django.core.validators import RegexValidator
 
 
 class UserSerializer(serializers.ModelSerializer):
     phone_number = serializers.CharField(required=False, allow_blank=True)
+    
+    phone_number = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        validators=[
+            RegexValidator(
+                regex=r'^\+?1?\d{9,15}$',
+                message="Phone number must be in format: '+999999999'. Up to 15 digits."
+            )
+        ]
+    )
+    
+    password = serializers.CharField(
+        write_only=True,
+        min_length=8,
+        error_messages={
+            "min_length": "Password must be at least 8 characters."
+        }
+    )
 
     class Meta:
         model = User
@@ -43,3 +63,19 @@ class UserSerializer(serializers.ModelSerializer):
                 validated_data.pop('role')
         
         return super().update(instance, validated_data)    
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("This email is already in use.")
+        return value
+
+    def validate_password(self, value):
+        if not any(char.isdigit() for char in value):
+            raise serializers.ValidationError("Password must contain at least one number.")
+        if not any(char.isupper() for char in value):
+            raise serializers.ValidationError("Password must contain at least one uppercase letter.")
+        return value
+
+    def validate_phone_number(self, value):
+        if value and User.objects.filter(phone_number=value).exists():
+            raise serializers.ValidationError("This phone number is already in use.")
+        return value

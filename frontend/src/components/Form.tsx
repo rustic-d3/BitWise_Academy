@@ -1,18 +1,49 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import api from "../api";
 
 interface FormProps {
   form_type: "login" | "register";
+  route: any;
 }
 
-export default function Form({ form_type }: FormProps) {
+export default function Form({ form_type, route }: FormProps) {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    firstname: "",
-    lastname: "",
+    first_name: "",
+    last_name: "",
     username: "",
-    phoneNumber: "",
+    phone_number: "",
     email: "",
     password: "",
   });
+
+  async function handleSubmit() {
+    console.log(route);
+    console.log(formData);
+
+    const loginData = {
+      username: formData.username,
+      password: formData.password,
+    };
+
+    const data_to_send = form_type == "login" ? loginData : formData;
+
+    try {
+      const res = await api.post(route, data_to_send);
+      console.log(res.data);
+
+      if (form_type == "login") {
+        localStorage.setItem("access", res.data.access);
+        localStorage.setItem("refresh", res.data.refresh);
+        navigate("/dashboard");
+      } else {
+        navigate("/login");
+      }
+    } catch (error) {
+      alert(error);
+    }
+  }
 
   const isRegister = form_type === "register";
 
@@ -31,14 +62,14 @@ export default function Form({ form_type }: FormProps) {
           <div className="flex gap-4">
             <input
               placeholder="First Name"
-              value={formData.firstname}
-              onChange={(e) => updateField("firstname", e.target.value)}
+              value={formData.first_name}
+              onChange={(e) => updateField("first_name", e.target.value)}
               className="input-field flex-1"
             />
             <input
               placeholder="Last Name"
-              value={formData.lastname}
-              onChange={(e) => updateField("lastname", e.target.value)}
+              value={formData.last_name}
+              onChange={(e) => updateField("last_name", e.target.value)}
               className="input-field flex-1"
             />
           </div>
@@ -65,8 +96,8 @@ export default function Form({ form_type }: FormProps) {
           <input
             type="text"
             placeholder="Phone Number"
-            value={formData.phoneNumber}
-            onChange={(e) => updateField("phoneNumber", e.target.value)}
+            value={formData.phone_number}
+            onChange={(e) => updateField("phone_number", e.target.value)}
             className="input-field"
           />
         )}
@@ -81,7 +112,7 @@ export default function Form({ form_type }: FormProps) {
 
         <button
           type="button"
-          onClick={() => console.log(formData)}
+          onClick={handleSubmit}
           className="w-full py-2.5 px-4 bg-[#BE3455] hover:bg-[#df204c] active:bg-[#df204c] text-white font-semibold rounded-lg transition-colors cursor-pointer"
         >
           {isRegister ? "Sign Up" : "Log In"}

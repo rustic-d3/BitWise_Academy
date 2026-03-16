@@ -4,14 +4,11 @@ import Register from "./pages/Register";
 import Login from "./pages/Login";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
+import NotFound from "./pages/NotFound";
 
 function LogOutAndRegister() {
   localStorage.clear();
   return <Register />;
-}
-function LogOutAndLogin() {
-  localStorage.clear();
-  return <Login />;
 }
 
 function App() {
@@ -20,7 +17,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/register" element={<LogOutAndRegister />} />
-          <Route path="/login" element={<LogOutAndLogin />} />
+          <Route path="/login" element={<Login />} />
           <Route
             path="/dashboard"
             element={
@@ -29,6 +26,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </>
