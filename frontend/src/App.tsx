@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import ParentDashboard from "./pages/ParentDashboard";
 import { jwtDecode } from "jwt-decode";
 import TeacherDashboard from "./pages/TeacherDashboard";
+import TutoringLayout from "./components/TutoringLayout";
 
 interface JwtPayload {
   exp: number;
@@ -49,6 +50,14 @@ function App() {
                   {role.toLowerCase() === "parent" && <ParentDashboard />}
                   {role.toLowerCase() === "teacher" && <TeacherDashboard />}
                 </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/room"
+            element={
+              <ProtectedRoute>
+                <TutoringLayout />
               </ProtectedRoute>
             }
           />
