@@ -1,16 +1,15 @@
-import { ParticipantList } from "./ParticipantList";
-import { ParticipantVideo } from "./ParticipantVideo";
+interface LeftPanelProps {
+  children?: React.ReactNode;
+}
 
-export const LeftPanel = () => (
-  <div className="w-80 flex flex-col border-r border-gray-200 bg-white shrink-0">
-    <ParticipantVideo name="Rustic Dumbrava" />
+export const LeftPanel = ({ children }: LeftPanelProps) => (
+  <div className="w-80 flex flex-col border-r border-gray-200 bg-white shrink-0 overflow-y-auto">
+    <div className="flex flex-col gap-2 p-2">{children}</div>
 
-    {/* Student list / waiting area */}
-    <ParticipantList />
-
-    {/* Bottom chat input area */}
-    <div className="border-t border-gray-200 p-2">
-      {/* Chat input can go here */}
-    </div>
+    {!children && (
+      <div className="flex-1 flex items-center justify-center text-sm italic text-[#BE3455]">
+        Waiting for students...
+      </div>
+    )}
   </div>
 );
