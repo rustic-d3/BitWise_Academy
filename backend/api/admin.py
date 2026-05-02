@@ -12,6 +12,7 @@ class UserAdmin(admin.ModelAdmin):
                 user.save()
                 ParentProfile.objects.filter(user=user).delete()
                 TeacherProfile.objects.get_or_create(user=user)
+        self.message_user(request, "Selected users have been promoted to Teacher.")
 
     promote_to_teacher.short_description = "Promote to Teacher"
 

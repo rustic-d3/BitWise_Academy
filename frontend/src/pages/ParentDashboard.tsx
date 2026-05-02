@@ -1,3 +1,9 @@
+import  Navbar  from "../components/Navbar";
+
 export default function ParentDashboard() {
-  return <div>Hello from the parent dashboard!</div>;
+  return (
+    <Navbar
+      role="parent"
+    />
+  );
 }

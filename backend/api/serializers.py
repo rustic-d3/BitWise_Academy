@@ -33,36 +33,42 @@ class UserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         role = validated_data.get('role', User.Role.PARENT)
-        
+    
         request = self.context.get('request')
         if role == User.Role.ADMIN and not (request and request.user.is_superuser):
             role = User.Role.PARENT
 
         phone_number = validated_data.pop('phone_number', None)
-        validated_data.pop('description', None)
-        validated_data.pop('teaching_module', None)
+        description = validated_data.pop('description', None)
+        teaching_module = validated_data.pop('teaching_module', None)
+    
+        validated_data['role'] = role  # enforce the corrected role before creation
 
-
-        user = User.objects.create_user(**validated_data)
-
+        user = User.objects.create_user(**validated_data)  # create user FIRST
 
         if role == User.Role.TEACHER:
-            user.role = User.Role.TEACHER
-            user.save()
-            TeacherProfile.objects.create(user=user)
+            TeacherProfile.objects.create(user=user, teaching_module= teaching_module, description= description)
+
         else:
             ParentProfile.objects.create(user=user, phone_number=phone_number)
 
         return user
-
+    
+    
     def update(self, instance, validated_data):
         request = self.context.get('request')
         
-        if 'role' in validated_data:
-            if not request.user.is_superuser:
-                validated_data.pop('role')
+        if 'role' in validated_data and not request.user.is_superuser:
+            validated_data.pop('role')
+
+        password = validated_data.pop('password', None)
+        instance = super().update(instance, validated_data)
         
-        return super().update(instance, validated_data)  
+        if password:
+            instance.set_password(password)
+            instance.save()
+        
+        return instance  
 
     def validate_username(self, value):
         if User.objects.filter(username=value).exists():
