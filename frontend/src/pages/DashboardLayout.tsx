@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { getUserRole } from "../helper-functions/DecodedToken";
+import "../styles/dashboard.scss";
 
 interface RoleBasedDashboards {
   children: ReactNode;

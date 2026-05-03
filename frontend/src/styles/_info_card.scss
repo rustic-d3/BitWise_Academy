@@ -1,0 +1,91 @@
+// _info_card.scss
+@use "global" as g;
+@use "variables" as v;
+
+.card-container {
+  width: 40%;
+  min-width: 280px;
+  max-width: 420px;
+
+  @media (max-width: g.$breakpoint-tablet) {
+    width: 90%;
+  }
+}
+
+.decorator-container {
+  background: g.$primary-gradient;
+  position: relative;
+  height: 50px;
+  width: 100%;
+  overflow: visible;
+
+  img {
+    position: absolute;
+    top: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+}
+
+.info-container {
+  background-color: g.$white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1em 2em;
+  border-left: 2px solid rgba(0, 0, 0, 0.25);
+  border-right: 2px solid rgba(0, 0, 0, 0.25);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.25);
+
+  @media (max-width: g.$breakpoint-tablet) {
+    padding: 0.75em 1.25em; // mai puțin padding pe mobile
+  }
+
+  h1 {
+    text-align: center;
+    font-size: g.$font-size-title;
+    margin-top: 0.5em; // spațiu față de avatar
+
+    @media (max-width: g.$breakpoint-tablet) {
+      font-size: g.$font-size-title-mobile;
+    }
+  }
+
+  p {
+    padding: 0.7em 0;
+    font-size: g.$font-size-label;
+    color: g.$gray-text;
+    line-height: 1.5;
+  }
+
+  button {
+    display: flex;
+    justify-content: center;
+    gap: v.$spacing-md;
+    max-width: fit-content;
+    margin: 1em 0 0 0;
+
+    transition: stroke 0.2s ease;
+
+    &:hover {
+      // Schimbă textul și iconițele în alb
+      color: g.$white;
+
+      svg {
+        // Asigură-te că SVG-ul preia culoarea definită de părinte
+        stroke: currentColor;
+        fill: currentColor;
+      }
+    }
+
+    svg {
+      transition:
+        stroke 0.2s ease,
+        fill 0.2s ease;
+    } // sau fill: g.$white; în funcție de SVG
+  }
+}
