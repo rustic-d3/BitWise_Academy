@@ -22,13 +22,48 @@ $font-sansation: "Sansation", sans-serif;
   box-sizing: border-box;
 }
 
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+ul {
+  list-style: none;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+html {
+  width: 100%;
+  height: 100%;
+}
+
 body {
   font-family: $font-sansation;
+  font-style: normal;
   background-color: $white;
   color: $text-dark;
-  display: flex;
   justify-content: center;
-  align-items: center;
   min-height: 100vh;
-  width: 100vw;
+  width: 100%;
+}
+.main-content {
+  width: 90%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 0;
 }
