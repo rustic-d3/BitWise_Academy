@@ -6,10 +6,10 @@ export default function ParentDashboard() {
     <div className="page-wrapper">
       <Navbar role="parent" />
       <main className="main-content">
-        <div className="left-side">
+        <div className="left-side-container">
           <InfoCard></InfoCard>
         </div>
-        <div className="right-side"></div>
+        <div className="right-side-container"></div>
       </main>
     </div>
   );

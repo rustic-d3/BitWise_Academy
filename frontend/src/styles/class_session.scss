@@ -1,0 +1,38 @@
+@use "global" as g;
+@use "variables" as v;
+@use "buttons" as b;
+
+.session-container {
+  display: flex;
+  width: 100%;
+  gap: 3em;
+  height: fit-content;
+  flex-direction: column;
+  border: 2px solid rgba($color: #000000, $alpha: 0.25);
+  padding: 2em;
+
+  .row {
+    &-1 {
+      display: flex;
+      justify-content: space-between;
+      .col-1 {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5em;
+      }
+      .col-2 {
+        gap: 1em;
+        display: grid;
+        grid-template-columns: auto auto auto;
+      }
+    }
+    &-2 {
+      display: flex;
+      justify-content: flex-end;
+      .buttons-section {
+        gap: 2em;
+        display: flex;
+      }
+    }
+  }
+}

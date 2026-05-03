@@ -1,7 +1,8 @@
 @use "variables" as v;
 @use "global" as g;
 
-.btn {
+// stiluri comune
+%btn-base {
   padding: 0.45rem 1.1rem;
   border-radius: v.$border-radius-sm;
   font-family: g.$font-sansation;
@@ -9,29 +10,27 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  border: none;
+}
 
-  &--outline {
-    background-color: transparent;
-    padding: 0.45rem 1.1rem;
-    border-radius: v.$border-radius-sm;
-    font-size: v.$font-size-btn;
-    border: 1.5px solid g.$primary-orange;
-    color: g.$primary-orange;
-    transition: all 0.2s ease;
+.btn--primary {
+  @extend %btn-base;
+  background: g.$primary-gradient;
+  color: g.$white;
 
-    &:hover {
-      background-color: g.$primary-orange;
-      color: g.$white;
-    }
+  &:hover {
+    filter: brightness(1.05);
   }
+}
 
-  &--primary {
-    background: g.$primary-gradient;
-    border: none;
+.btn--outline {
+  @extend %btn-base;
+  background-color: transparent;
+  border: 1.5px solid g.$primary-orange;
+  color: g.$primary-orange;
+
+  &:hover {
+    background-color: g.$primary-orange;
     color: g.$white;
-
-    &:hover {
-      filter: brightness(1.05);
-    }
   }
 }

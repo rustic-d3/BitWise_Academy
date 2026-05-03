@@ -1,5 +1,45 @@
 @use "global" as g;
+@use "variables" as v;
 
 body {
   background-color: g.$gray-light !important;
+}
+
+.main-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  gap: 2em;
+
+  @media (min-width: v.$breakpoint-desktop) {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+}
+
+.left-side-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  @media (min-width: v.$breakpoint-desktop) {
+    width: 25%;
+  }
+}
+
+.right-side-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2em;
+  justify-content: center;
+  padding: 2em 1em;
+
+  @media (min-width: v.$breakpoint-tablet) {
+    width: 75%;
+  }
+
+  background: g.$white;
+  border: 2px solid rgba(0, 0, 0, 0.25);
+  height: 100vh;
 }

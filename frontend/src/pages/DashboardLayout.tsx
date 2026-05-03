@@ -16,7 +16,7 @@ export default function DashboardLayout({ children }: RoleBasedDashboards) {
   };
 
   return (
-    <div>
+    <>
       {children}
 
       {/* <button
@@ -25,6 +25,6 @@ export default function DashboardLayout({ children }: RoleBasedDashboards) {
       >
         Join Session
       </button> */}
-    </div>
+    </>
   );
 }
