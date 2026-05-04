@@ -47,7 +47,6 @@ class TeacherProfile(models.Model):
 
 class ParentProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="parent_profile")
-    credits = models.PositiveIntegerField(default=0)
 
     class Meta:
         verbose_name = "Parent"
@@ -55,6 +54,32 @@ class ParentProfile(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - Parent"
+
+
+class ChildProfile(models.Model):
+    parent = models.ForeignKey(ParentProfile, on_delete=models.CASCADE, related_name="children")
+    classroom = models.ForeignKey(
+        "Classroom",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="students",
+    )
+    credits = models.PositiveIntegerField(default=0)
+    full_name = models.CharField(max_length=50, null=True)
+    class Meta:
+        verbose_name = "Child"
+        verbose_name_plural = "Children"
+    
+    
+    def update_classroom(self, new_classroom):
+        self.classroom = None
+        self.classroom = new_classroom
+        self.save()
+        
+
+    def __str__(self):
+        return self.full_name or f"Child {self.id}"
 
 
 DAYS_MAP = {
@@ -68,11 +93,7 @@ class Classroom(models.Model):
         TeacherProfile,
         on_delete=models.CASCADE,
         related_name="classrooms",
-    )
-    students = models.ManyToManyField(
-        ParentProfile,
-        related_name="classrooms",
-        blank=True,
+        blank=True
     )
     schedule_day = models.CharField(max_length=3)
     schedule_time = models.CharField(max_length=5)
@@ -82,6 +103,8 @@ class Classroom(models.Model):
     class Meta:
         verbose_name = "Classroom"
         verbose_name_plural = "Classrooms"
+        
+    
 
     def __str__(self):
         return f"Classroom {self.id} - {self.teacher.user.username}"
@@ -115,7 +138,7 @@ class Lesson(models.Model):
 
 class LessonAttendance(models.Model):
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name="attendance")
-    student = models.ForeignKey(ParentProfile, on_delete=models.CASCADE)
+    student = models.ForeignKey(ChildProfile, on_delete=models.CASCADE)
     attended = models.BooleanField(default=False)
 
     class Meta:
