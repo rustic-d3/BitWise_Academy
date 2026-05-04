@@ -1,59 +1,52 @@
+import React, { useEffect } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import "./App.css";
+
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NotFound from "./pages/NotFound";
-import DashboardLayout from "./pages/DashboardLayout";
-import { useEffect, useState } from "react";
 import ParentDashboard from "./pages/ParentDashboard";
-import { jwtDecode } from "jwt-decode";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import TutoringLayout from "./components/TutoringLayout";
-
-interface JwtPayload {
-  exp: number;
-  role: string;
-}
+import { getUserRole } from "./helper-functions/DecodedToken";
 
 function LogOutAndRegister() {
   localStorage.clear();
   return <Register />;
 }
+
 function LogOutAndLogin() {
   useEffect(() => {
     localStorage.clear();
   }, []);
 
-  return <Login />;
+  return <Login />; 
 }
 
 function App() {
-  const [role, setRole] = useState(() => {
-    const token = localStorage.getItem("access");
-    if (!token) return "";
-    const decoded = jwtDecode<JwtPayload>(token);
-    return decoded.role;
-  });
+  const role = getUserRole();
 
   return (
     <>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Navigate to="/dashboard" replace />}/>
+          {/* Default redirect to login */}
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          
           <Route path="/register" element={<LogOutAndRegister />} />
           <Route path="/login" element={<LogOutAndLogin />} />
+          
           <Route
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <DashboardLayout>
-                  {role.toLowerCase() === "parent" && <ParentDashboard />}
-                  {role.toLowerCase() === "teacher" && <TeacherDashboard />}
-                </DashboardLayout>
+                {role && role.toLowerCase() === "parent" && <ParentDashboard />}
+                {role && role.toLowerCase() === "teacher" && <TeacherDashboard />}
               </ProtectedRoute>
             }
           />
+          
           <Route
             path="/room"
             element={
@@ -62,6 +55,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+          
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
