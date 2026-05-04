@@ -1,18 +1,28 @@
 import "../styles/_info_card.scss";
 
-export default function InfoCard() {
+export interface InfoCardData {
+  first_name: string;
+  last_name: string;
+  description: string;
+}
+
+interface InfoCardProps {
+  data?: InfoCardData | null;
+}
+export default function InfoCard({ data }: InfoCardProps) {
+  if (!data) {
+    return <div>Loading card...</div>;
+  }
   return (
     <div className="card-container">
       <div className="decorator-container">
         <img src="/avatar.png" alt="avatar_photo" />
       </div>
       <div className="info-container">
-        <h1>Wanessa Grati</h1>
-        <p>
-          Lorem, ipsum dolor sit amet consectetur adipisicing elit. Tempora fuga
-          corrupti fugiat, esse illo soluta omnis doloribus distinctio hic
-          recusandae?
-        </p>
+        <h1>
+          {data.first_name} {data.last_name}
+        </h1>
+        <p>{data.description}</p>
         <button className="btn--outline">
           <svg
             width="15"

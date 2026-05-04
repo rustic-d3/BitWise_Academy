@@ -62,7 +62,7 @@ export default function Form({ form_type, route }: FormProps) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setAuthError(""); 
+    setAuthError("");
 
     if (isRegister && !validateForm()) return;
     const loginData = {
@@ -124,8 +124,8 @@ export default function Form({ form_type, route }: FormProps) {
               <label>Nume</label>
               <input
                 placeholder="Nume"
-                value={formData.first_name}
-                onChange={(e) => updateField("first_name", e.target.value)}
+                value={formData.last_name}
+                onChange={(e) => updateField("last_name", e.target.value)}
               />
               {validationErrors.firstNameError && (
                 <span className="error-message">
@@ -137,8 +137,8 @@ export default function Form({ form_type, route }: FormProps) {
               <label>Prenume</label>
               <input
                 placeholder="Prenume"
-                value={formData.last_name}
-                onChange={(e) => updateField("last_name", e.target.value)}
+                value={formData.first_name}
+                onChange={(e) => updateField("first_name", e.target.value)}
               />
               {validationErrors.lastNameError && (
                 <span className="error-message">

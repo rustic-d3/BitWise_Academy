@@ -1,4 +1,4 @@
-from api.models import Classroom, Lesson, User, TeacherProfile, ParentProfile
+from api.models import ChildProfile, Classroom, Lesson, User, TeacherProfile, ParentProfile
 from rest_framework import serializers
 from django.core.validators import RegexValidator
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -24,9 +24,13 @@ class UserSerializer(serializers.ModelSerializer):
         }
     )
 
+    # Added as write-only fields to allow parsing them from the request without errors
+    description = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    teaching_module = serializers.CharField(write_only=True, required=False, allow_blank=True)
+
     class Meta:
         model = User
-        fields = ["id", "first_name", "last_name", "username", "password", "email", "role", "phone_number"]
+        fields = ["id", "first_name", "last_name", "username", "password", "email", "role", "phone_number", "description", "teaching_module"]
         extra_kwargs = {
             "role": {"required": False}, 
         }
@@ -38,22 +42,25 @@ class UserSerializer(serializers.ModelSerializer):
         if role == User.Role.ADMIN and not (request and request.user.is_superuser):
             role = User.Role.PARENT
 
+        # Pop from validated data
         phone_number = validated_data.pop('phone_number', None)
         description = validated_data.pop('description', None)
         teaching_module = validated_data.pop('teaching_module', None)
     
-        validated_data['role'] = role  # enforce the corrected role before creation
+        validated_data['role'] = role  # Enforce corrected role before creation
+        
+        # 1. Assign the phone_number directly to the validated data before creating the user
+        if phone_number:
+            validated_data['phone_number'] = phone_number
 
-        user = User.objects.create_user(**validated_data)  # create user FIRST
+        user = User.objects.create_user(**validated_data)  # create user with phone_number
 
         if role == User.Role.TEACHER:
-            TeacherProfile.objects.create(user=user, teaching_module= teaching_module, description= description)
-
+            TeacherProfile.objects.create(user=user, teaching_module=teaching_module, description=description)
         else:
-            ParentProfile.objects.create(user=user, phone_number=phone_number)
+            ParentProfile.objects.create(user=user) # No phone_number field here anymore
 
         return user
-    
     
     def update(self, instance, validated_data):
         request = self.context.get('request')
@@ -88,10 +95,10 @@ class UserSerializer(serializers.ModelSerializer):
         return value
     
     def validate_phone_number(self, value):
-        if value and ParentProfile.objects.filter(phone_number=value).exists():
+        # Validate against User model instead of ParentProfile
+        if value and User.objects.filter(phone_number=value).exists():
             raise serializers.ValidationError("This phone number is already in use.")
         return value
-
 
 # serializers.py
 
@@ -100,13 +107,17 @@ class LessonSerializer(serializers.ModelSerializer):
         model = Lesson
         fields = ["id", "date_time", "is_canceled"]
 
-
+class ChildProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ChildProfile
+        fields = ["id", "full_name", "credits", "parent"]
+        
 class ClassroomSerializer(serializers.ModelSerializer):
     lessons = LessonSerializer(many=True, read_only=True)
-
+    students = ChildProfileSerializer(many=True, read_only=True)
     class Meta:
         model = Classroom
-        fields = ["id", "schedule_day", "schedule_time", "is_canceled", "lessons"]
+        fields = ["id", "titlu", "students", "schedule_day", "schedule_time", "is_canceled", "lessons"]
 
 
 class TeacherProfileSerializer(serializers.ModelSerializer):

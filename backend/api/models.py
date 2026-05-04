@@ -2,12 +2,19 @@ from datetime import datetime, timedelta
 
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.utils.translation import gettext_lazy as _
 
+class ClassroomSubjects(models.TextChoices):
+        M1 = "M1 | Alfabetizare Digitală", _("M1")
+        M2 = "M2 | Introducere În Programare", _("M2")
+        M3 = "M3 | Programare Distractivă", _("M3")
+        M4 = "M4 | Unity - C#", _("M4")
+        M5 = "M5 | Arduino - Sisteme Încorporate", _("M5")
+        M6 = "M6 | LUA - Roblox Studio", _("M6")
+        M7 = "M7 | Game Design - Începător", _("M7")
+        M8 = "M8 | Game Design - Intermediar", _("M8")
+        M9 = "M9 | Game Design - Avansat", _("M9")
 
-class Module(models.TextChoices):
-    M1 = "M1", "M1 - Introducere în programare"
-    M2 = "M2", "M2 - Programare Python"
-    M3 = "M3", "M3 - Programare Python avansat"
 
 
 class User(AbstractUser):
@@ -24,8 +31,8 @@ class TeacherProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="teacher_profile")
     description = models.TextField(max_length=200, null=True, blank=True)
     teaching_module = models.CharField(
-        max_length=50,
-        choices=Module.choices,
+        max_length=150,
+        choices=ClassroomSubjects.choices,
         null=True,
         blank=True,
     )
@@ -90,6 +97,14 @@ DAYS_MAP = {
 
 
 class Classroom(models.Model):
+    
+        
+
+    titlu = models.CharField(
+        max_length=150,
+        choices=ClassroomSubjects,
+        default=ClassroomSubjects.M1,
+    )
     teacher = models.ForeignKey(
         TeacherProfile,
         on_delete=models.CASCADE,
