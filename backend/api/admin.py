@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Classroom, Lesson, TeacherProfile, ParentProfile, LessonAttendance
+from .models import ChildProfile, Classroom, Lesson, TeacherProfile, ParentProfile, LessonAttendance
 from .signals import sync_lessons_for_classroom
 
 
@@ -18,6 +18,10 @@ class TeacherProfileAdmin(admin.ModelAdmin):
 
 @admin.register(ParentProfile)
 class ParentProfileAdmin(admin.ModelAdmin):
+    pass
+
+@admin.register(ChildProfile)
+class ChildProfileAdmin(admin.ModelAdmin):
     pass
 
 
