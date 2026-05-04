@@ -1,0 +1,86 @@
+// _register.scss
+@import "global";
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto; // Ensures smooth vertical scrolling on mobile viewports
+}
+
+.main-container {
+  display: flex;
+  flex-direction: column; // Stacks the layout on phones
+  width: 100vw;
+  min-height: 100vh;
+
+  .photo-background {
+    display: none; // Hides the background image on mobile devices
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  .form-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start; // Keeps content at the top so it doesn't overflow
+    align-items: center;
+    background-color: $white;
+    padding: 1.5rem 1rem 2rem 1rem; // Reduced padding for mobile to save vertical space
+    width: 100%;
+    min-height: auto;
+
+    .logo-container {
+      text-align: center;
+      margin-bottom: 1rem; // Decreased margin to bring the logo closer to the form
+      flex-shrink: 0; // Ensures the logo doesn't shrink when space is restricted
+
+      img,
+      .logo-text {
+        width: 90px; // Smaller width for mobile to ensure it always fits
+        height: auto;
+        flex-shrink: 0;
+      }
+
+      h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: $text-dark;
+        margin-top: 0.25rem;
+      }
+    }
+  }
+
+  // Tablet & Desktop breakpoint (Split-screen behavior)
+  @media (min-width: 768px) {
+    flex-direction: row;
+    height: 100vh;
+    min-height: 100vh;
+    overflow: hidden;
+
+    .photo-background {
+      display: block; // Shows the background image on large screens
+      flex: 1;
+      height: 100%;
+    }
+
+    .form-column {
+      justify-content: center; // Restores vertical centering
+      padding: 2.5rem;
+
+      .logo-container {
+        margin-bottom: 2rem;
+
+        img,
+        .logo-text {
+          width: 120px;
+        }
+      }
+    }
+  }
+}

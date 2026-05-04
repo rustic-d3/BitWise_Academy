@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
+import "../styles/_form.scss";
 
 interface FormProps {
   form_type: "login" | "register";
@@ -9,6 +10,7 @@ interface FormProps {
 
 export default function Form({ form_type, route }: FormProps) {
   const navigate = useNavigate();
+  const [authError, setAuthError] = useState("");
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
@@ -25,6 +27,7 @@ export default function Form({ form_type, route }: FormProps) {
     phoneNumberError: "",
     passwordError: "",
   });
+
   function validateForm() {
     const errors = {
       firstNameError: "",
@@ -56,7 +59,11 @@ export default function Form({ form_type, route }: FormProps) {
     setValidationErrors(errors);
     return !Object.values(errors).some(Boolean);
   }
-  async function handleSubmit() {
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setAuthError(""); // Clear previous errors
+
     if (isRegister && !validateForm()) return;
     const loginData = {
       username: formData.username,
@@ -77,6 +84,15 @@ export default function Form({ form_type, route }: FormProps) {
       }
     } catch (error: any) {
       const data = error.response?.data;
+
+      if (typeof data === "string") {
+        setAuthError(data);
+      } else if (data?.detail) {
+        setAuthError(data.detail);
+      } else if (!data) {
+        setAuthError("Network error. Please try again.");
+      }
+
       setValidationErrors((prev) => ({
         ...prev,
         usernameError: data?.username?.[0] || "",
@@ -96,127 +112,133 @@ export default function Form({ form_type, route }: FormProps) {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md">
-      <h1 className="text-2xl font-bold text-slate-800 mb-6 text-center">
-        {isRegister ? "Create an account" : "Welcome back"}
+    <div className="form-container">
+      <h1 className="form-title">
+        {isRegister ? "Create an account" : "Welcome"}
       </h1>
 
-      <form className="flex flex-col gap-4">
+      <form onSubmit={handleSubmit} className="form-group">
         {isRegister && (
-          <div className="flex gap-4">
-            <div className="flex flex-col flex-1">
+          <div className="row">
+            <div className="field-wrapper">
+              <label>Nume</label>
               <input
-                placeholder="First Name"
+                placeholder="Nume"
                 value={formData.first_name}
                 onChange={(e) => updateField("first_name", e.target.value)}
-                className="input-field"
               />
               {validationErrors.firstNameError && (
-                <p className="text-red-500 text-sm">
+                <span className="error-message">
                   {validationErrors.firstNameError}
-                </p>
+                </span>
               )}
             </div>
-            <div className="flex flex-col flex-1">
+            <div className="field-wrapper">
+              <label>Prenume</label>
               <input
-                placeholder="Last Name"
+                placeholder="Prenume"
                 value={formData.last_name}
                 onChange={(e) => updateField("last_name", e.target.value)}
-                className="input-field"
               />
               {validationErrors.lastNameError && (
-                <p className="text-red-500 text-sm">
+                <span className="error-message">
                   {validationErrors.lastNameError}
-                </p>
+                </span>
               )}
             </div>
           </div>
         )}
-        <div>
+
+        <div className="field-wrapper">
+          <label>Nume de utilizator</label>
           <input
-            placeholder="Username"
+            placeholder="Nume de utilizator"
             value={formData.username}
             onChange={(e) => updateField("username", e.target.value)}
-            className="input-field"
           />
           {validationErrors.usernameError && (
-            <p className="text-red-500 text-sm">
+            <span className="error-message">
               {validationErrors.usernameError}
-            </p>
+            </span>
           )}
         </div>
 
         {isRegister && (
-          <div>
+          <div className="field-wrapper">
+            <label>Email</label>
             <input
               type="email"
               placeholder="Email"
               value={formData.email}
               onChange={(e) => updateField("email", e.target.value)}
-              className="input-field"
             />
             {validationErrors.emailError && (
-              <p className="text-red-500 text-sm">
+              <span className="error-message">
                 {validationErrors.emailError}
-              </p>
+              </span>
             )}
           </div>
         )}
 
         {isRegister && (
-          <div>
+          <div className="field-wrapper">
+            <label>Phone Number</label>
             <input
               type="text"
-              placeholder="Phone Number"
+              placeholder="Număr de telefon"
               value={formData.phone_number}
               onChange={(e) => updateField("phone_number", e.target.value)}
-              className="input-field"
             />
             {validationErrors.phoneNumberError && (
-              <p className="text-red-500 text-sm">
+              <span className="error-message">
                 {validationErrors.phoneNumberError}
-              </p>
+              </span>
             )}
           </div>
         )}
-        <div>
+
+        <div className="field-wrapper">
+          <label>Parolă</label>
           <input
             type="password"
-            placeholder="Password"
+            placeholder="Parolă"
             value={formData.password}
             onChange={(e) => updateField("password", e.target.value)}
-            className="input-field"
           />
 
           {validationErrors.passwordError && (
-            <p className="text-red-500 text-sm">
+            <span className="error-message">
               {validationErrors.passwordError}
-            </p>
+            </span>
           )}
         </div>
+
         {isRegister && (
-          <p className="text-sm">
-            Already have an account?{" "}
-            <a className="text-red-500 text-sm" href="/login">
-              Log In here!
-            </a>
+          <p className="footer-text">
+            Ai deja un cont? <a href="/login">Loghează-te aici!</a>
           </p>
         )}
         {!isRegister && (
-          <p className="text-sm">
-            Don't have an account?{" "}
-            <a className="text-red-500 text-sm" href="/register">
-              Register here!
-            </a>
+          <p className="footer-text">
+            Nu ai cont? <a href="/register">Înregistrează-te aici!</a>
+          </p>
+        )}
+        {authError && (
+          <p
+            className="error-message"
+            style={{
+              color: "#EF4444",
+              fontSize: "0.875rem",
+              textAlign: "center",
+              margin: "0.5rem 0",
+            }}
+          >
+            {authError}
           </p>
         )}
 
-        <button
-          type="button"
-          onClick={handleSubmit}
-          className="w-full py-2.5 px-4 bg-[#BE3455] hover:bg-[#df204c] active:bg-[#df204c] text-white font-semibold rounded-lg transition-colors cursor-pointer"
-        >
-          {isRegister ? "Sign Up" : "Log In"}
+        <button type="submit" className="submit-btn">
+          {isRegister ? "Înregistrează-te" : "Log In"}
         </button>
       </form>
     </div>

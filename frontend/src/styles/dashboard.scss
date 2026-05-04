@@ -1,0 +1,48 @@
+@use "global" as g;
+@use "variables" as v;
+
+body {
+  background-color: g.$gray-light !important;
+}
+
+.main-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2em;
+  padding: 1.5em 1em;
+
+  @media (min-width: v.$breakpoint-desktop) {
+    flex-direction: row;
+    align-items: flex-start;
+    padding: 2em 1.5em;
+  }
+}
+
+.left-side-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+
+  @media (min-width: v.$breakpoint-desktop) {
+    width: 25%;
+    position: sticky;
+    top: 80px;
+  }
+}
+
+.right-side-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5em;
+  padding: 1.5em 1em;
+  background: g.$white;
+  border: 2px solid rgba(0, 0, 0, 0.25);
+
+  @media (min-width: v.$breakpoint-desktop) {
+    width: 75%;
+    padding: 2em;
+    gap: 2em;
+  }
+}

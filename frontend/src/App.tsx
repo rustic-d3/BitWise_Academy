@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import "./App.css";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import ParentDashboard from "./pages/ParentDashboard";
 import { jwtDecode } from "jwt-decode";
 import TeacherDashboard from "./pages/TeacherDashboard";
+import TutoringLayout from "./components/TutoringLayout";
 
 interface JwtPayload {
   exp: number;
@@ -39,6 +40,7 @@ function App() {
     <>
       <BrowserRouter>
         <Routes>
+          <Route path="/" element={<Navigate to="/dashboard" replace />}/>
           <Route path="/register" element={<LogOutAndRegister />} />
           <Route path="/login" element={<LogOutAndLogin />} />
           <Route
@@ -49,6 +51,14 @@ function App() {
                   {role.toLowerCase() === "parent" && <ParentDashboard />}
                   {role.toLowerCase() === "teacher" && <TeacherDashboard />}
                 </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/room"
+            element={
+              <ProtectedRoute>
+                <TutoringLayout />
               </ProtectedRoute>
             }
           />

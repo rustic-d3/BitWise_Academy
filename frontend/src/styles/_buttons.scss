@@ -1,0 +1,59 @@
+@use "variables" as v;
+@use "global" as g;
+
+// stiluri comune
+%btn-base {
+  padding: 0.45rem 1.1rem;
+  border-radius: v.$border-radius-sm;
+  font-family: g.$font-sansation;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: g.$spacing-buttons;
+}
+
+.btn--primary {
+  @extend %btn-base;
+  background: g.$primary-gradient;
+  color: g.$white;
+
+  &:hover {
+    filter: brightness(1.05);
+  }
+}
+
+.btn--outline {
+  @extend %btn-base;
+  background-color: transparent;
+  border: 1.5px solid g.$primary-orange;
+  color: g.$primary-orange;
+
+  &:hover {
+    background-color: g.$primary-orange;
+    color: g.$white;
+    path {
+      fill: white;
+    }
+  }
+}
+.btn--outline--red {
+  @extend %btn-base;
+  background-color: transparent;
+  border: 1.5px solid g.$error-red;
+  color: g.$error-red;
+
+  &:hover {
+    background-color: g.$error-red;
+    color: g.$white;
+
+    svg {
+      path {
+        fill: white;
+      }
+    }
+  }
+}

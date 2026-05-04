@@ -1,4 +1,4 @@
-from api.models import User, TeacherProfile, ParentProfile
+from api.models import Classroom, Lesson, User, TeacherProfile, ParentProfile
 from rest_framework import serializers
 from django.core.validators import RegexValidator
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -33,36 +33,42 @@ class UserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         role = validated_data.get('role', User.Role.PARENT)
-        
+    
         request = self.context.get('request')
         if role == User.Role.ADMIN and not (request and request.user.is_superuser):
             role = User.Role.PARENT
 
         phone_number = validated_data.pop('phone_number', None)
-        validated_data.pop('description', None)
-        validated_data.pop('teaching_module', None)
+        description = validated_data.pop('description', None)
+        teaching_module = validated_data.pop('teaching_module', None)
+    
+        validated_data['role'] = role  # enforce the corrected role before creation
 
-
-        user = User.objects.create_user(**validated_data)
-
+        user = User.objects.create_user(**validated_data)  # create user FIRST
 
         if role == User.Role.TEACHER:
-            user.role = User.Role.TEACHER
-            user.save()
-            TeacherProfile.objects.create(user=user)
+            TeacherProfile.objects.create(user=user, teaching_module= teaching_module, description= description)
+
         else:
             ParentProfile.objects.create(user=user, phone_number=phone_number)
 
         return user
-
+    
+    
     def update(self, instance, validated_data):
         request = self.context.get('request')
         
-        if 'role' in validated_data:
-            if not request.user.is_superuser:
-                validated_data.pop('role')
+        if 'role' in validated_data and not request.user.is_superuser:
+            validated_data.pop('role')
+
+        password = validated_data.pop('password', None)
+        instance = super().update(instance, validated_data)
         
-        return super().update(instance, validated_data)  
+        if password:
+            instance.set_password(password)
+            instance.save()
+        
+        return instance  
 
     def validate_username(self, value):
         if User.objects.filter(username=value).exists():
@@ -85,6 +91,30 @@ class UserSerializer(serializers.ModelSerializer):
         if value and ParentProfile.objects.filter(phone_number=value).exists():
             raise serializers.ValidationError("This phone number is already in use.")
         return value
+
+
+# serializers.py
+
+class LessonSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Lesson
+        fields = ["id", "date_time", "is_canceled"]
+
+
+class ClassroomSerializer(serializers.ModelSerializer):
+    lessons = LessonSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Classroom
+        fields = ["id", "schedule_day", "schedule_time", "is_canceled", "lessons"]
+
+
+class TeacherProfileSerializer(serializers.ModelSerializer):
+    classrooms = ClassroomSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = TeacherProfile
+        fields = ["description", "teaching_module", "classrooms"]
     
     
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
