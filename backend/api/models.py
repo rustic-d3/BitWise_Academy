@@ -17,6 +17,7 @@ class User(AbstractUser):
         PARENT = "PARENT", "Parent"
 
     role = models.CharField(max_length=10, choices=Role.choices, default=Role.PARENT)
+    phone_number = models.CharField(max_length=20, null=True, blank=True)
 
 
 class TeacherProfile(models.Model):
@@ -46,7 +47,6 @@ class TeacherProfile(models.Model):
 
 class ParentProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="parent_profile")
-    phone_number = models.CharField(max_length=20, null=True, blank=True)
     credits = models.PositiveIntegerField(default=0)
 
     class Meta:

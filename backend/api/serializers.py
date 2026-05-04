@@ -110,11 +110,14 @@ class ClassroomSerializer(serializers.ModelSerializer):
 
 
 class TeacherProfileSerializer(serializers.ModelSerializer):
+    first_name = serializers.CharField(source="user.first_name", read_only=True)
+    last_name = serializers.CharField(source="user.last_name", read_only=True)
     classrooms = ClassroomSerializer(many=True, read_only=True)
+    
 
     class Meta:
         model = TeacherProfile
-        fields = ["description", "teaching_module", "classrooms"]
+        fields = ["first_name", "last_name", "description", "teaching_module", "classrooms"]
     
     
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
