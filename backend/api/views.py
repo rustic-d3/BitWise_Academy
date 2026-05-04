@@ -1,4 +1,6 @@
 from django.shortcuts import render
+
+from .permissions import IsAdmin, IsParent, IsTeacher
 from .models import User
 from rest_framework import generics
 from .serializers import ClassroomSerializer, TeacherProfileSerializer, UserSerializer
@@ -25,7 +27,7 @@ class TeacherProfileView(generics.RetrieveUpdateAPIView):
 
 class CreateClassroomView(generics.CreateAPIView):
     serializer_class = ClassroomSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdmin]
 
     def perform_create(self, serializer):
-        serializer.save(teacher=self.request.user.teacher_profile)
+        serializer.save()
