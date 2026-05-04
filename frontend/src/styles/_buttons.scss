@@ -11,6 +11,9 @@
   cursor: pointer;
   transition: all 0.2s ease;
   border: none;
+  display: flex;
+  align-items: center;
+  gap: g.$spacing-buttons;
 }
 
 .btn--primary {
@@ -32,5 +35,25 @@
   &:hover {
     background-color: g.$primary-orange;
     color: g.$white;
+    path {
+      fill: white;
+    }
+  }
+}
+.btn--outline--red {
+  @extend %btn-base;
+  background-color: transparent;
+  border: 1.5px solid g.$error-red;
+  color: g.$error-red;
+
+  &:hover {
+    background-color: g.$error-red;
+    color: g.$white;
+
+    svg {
+      path {
+        fill: white;
+      }
+    }
   }
 }

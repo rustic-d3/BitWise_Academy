@@ -1,37 +1,119 @@
 @use "global" as g;
 @use "variables" as v;
-@use "buttons" as b;
 
 .session-container {
+  background-color: g.$white;
+  border: 2px solid rgba(0, 0, 0, 0.15);
+  border-radius: v.$border-radius-sm;
+  padding: v.$spacing-md;
   display: flex;
-  width: 100%;
-  gap: 3em;
-  height: fit-content;
   flex-direction: column;
-  border: 2px solid rgba($color: #000000, $alpha: 0.25);
-  padding: 2em;
+  gap: v.$spacing-md;
+  width: 100%;
 
-  .row {
-    &-1 {
-      display: flex;
-      justify-content: space-between;
-      .col-1 {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5em;
-      }
-      .col-2 {
-        gap: 1em;
-        display: grid;
-        grid-template-columns: auto auto auto;
+  @media (min-width: g.$breakpoint-tablet) {
+    padding: v.$spacing-lg;
+  }
+}
+
+.row-1 {
+  display: flex;
+  flex-direction: column;
+  gap: v.$spacing-md;
+
+  @media (min-width: g.$breakpoint-tablet) {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+}
+
+.col-1 {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: v.$spacing-xs;
+
+  p {
+    font-size: v.$font-size-label-mobile;
+    color: g.$gray-text;
+    font-style: normal;
+
+    @media (min-width: g.$breakpoint-tablet) {
+      font-size: v.$font-size-label;
+    }
+  }
+
+  .title-container {
+    display: flex;
+    align-items: center;
+    gap: 0.7em;
+    svg {
+      width: 14px;
+      height: 18px;
+    }
+    h1 {
+      font-size: v.$font-size-title-mobile;
+      color: g.$text-dark;
+      font-style: normal;
+      word-break: break-word;
+      text-align: center;
+
+      @media (min-width: g.$breakpoint-tablet) {
+        font-size: v.$font-size-title;
+        text-align: left;
       }
     }
-    &-2 {
-      display: flex;
-      justify-content: flex-end;
-      .buttons-section {
-        gap: 2em;
-        display: flex;
+  }
+  @media (min-width: g.$breakpoint-tablet) {
+    align-items: flex-start;
+  }
+}
+
+.col-2 {
+  display: grid;
+  grid-template-columns: auto;
+  gap: v.$spacing-xs;
+
+  @media (min-width: g.$breakpoint-tablet) {
+    display: grid;
+    grid-template-columns: auto auto auto;
+  }
+}
+
+.student-container {
+  padding: 0.3rem 0.75rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5em;
+
+  p {
+    font-size: v.$font-size-label-mobile;
+    font-style: normal;
+    white-space: nowrap;
+    color: g.$text-dark;
+
+    @media (min-width: g.$breakpoint-tablet) {
+      font-size: v.$font-size-label;
+    }
+  }
+}
+
+.row-2 {
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  padding-top: v.$spacing-sm;
+
+  .buttons-section {
+    display: flex;
+    gap: v.$spacing-sm;
+    justify-content: flex-end;
+
+    @media (max-width: g.$breakpoint-tablet) {
+      justify-content: stretch;
+
+      button {
+        flex: 1;
       }
     }
   }

@@ -1,30 +1,31 @@
 from django.contrib import admin
-from api.models import User, TeacherProfile, ParentProfile
 
-@admin.register(User)
-class UserAdmin(admin.ModelAdmin):
-    actions = ["promote_to_teacher", "change_to_parent_role"]
+from .models import Classroom, Lesson, TeacherProfile, ParentProfile, LessonAttendance
+from .signals import sync_lessons_for_classroom
 
-    def promote_to_teacher(self, request, queryset):
-        for user in queryset:
-            if user.role != User.Role.TEACHER:
-                user.role = User.Role.TEACHER
-                user.save()
-                ParentProfile.objects.filter(user=user).delete()
-                TeacherProfile.objects.get_or_create(user=user)
-        self.message_user(request, "Selected users have been promoted to Teacher role.")
-        
-    def change_to_parent_role(self, request, queryset):
-        for user in queryset:
-            if user.role != User.Role.PARENT:
-                user.role = User.Role.PARENT
-                user.save()
-                TeacherProfile.objects.filter(user=user).delete()
-                ParentProfile.objects.get_or_create(user=user)
-        self.message_user(request, "Selected users have been promoted to Parent role.")
 
-    change_to_parent_role.short_description = "Change to Parent role"
-    promote_to_teacher.short_description = "Change to Teacher role"
+@admin.register(Classroom)
+class ClassroomAdmin(admin.ModelAdmin):
+    def save_related(self, request, form, formsets, change):
+        super().save_related(request, form, formsets, change)
+        sync_lessons_for_classroom(form.instance)
 
-admin.site.register(TeacherProfile)
-admin.site.register(ParentProfile)
+
+@admin.register(TeacherProfile)
+class TeacherProfileAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(ParentProfile)
+class ParentProfileAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(Lesson)
+class LessonAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(LessonAttendance)
+class LessonAttendanceAdmin(admin.ModelAdmin):
+    pass

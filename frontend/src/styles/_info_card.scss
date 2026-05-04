@@ -3,13 +3,9 @@
 @use "variables" as v;
 
 .card-container {
-  width: 100%;
-  min-width: 300px;
+  width: 90%;
+  min-width: 0;
   max-width: 420px;
-
-  @media (max-width: g.$breakpoint-tablet) {
-    width: 90%;
-  }
 }
 
 .decorator-container {
@@ -41,17 +37,25 @@
   border-right: 2px solid rgba(0, 0, 0, 0.25);
   border-bottom: 2px solid rgba(0, 0, 0, 0.25);
 
-  @media (max-width: g.$breakpoint-tablet) {
-    padding: 0.75em 1.25em; // mai puțin padding pe mobile
+  @media (max-width: 390px) {
+    padding: 0.6em 0.75em;
+  }
+
+  @media (min-width: 391px) and (max-width: #{g.$breakpoint-tablet}) {
+    padding: 0.75em 1.25em;
   }
 
   h1 {
     text-align: center;
     font-size: g.$font-size-title;
-    margin-top: 0.5em; // spațiu față de avatar
+    margin-top: 0.5em;
 
-    @media (max-width: g.$breakpoint-tablet) {
+    @media (max-width: #{g.$breakpoint-tablet}) {
       font-size: g.$font-size-title-mobile;
+    }
+
+    @media (max-width: 390px) {
+      font-size: 1.1rem;
     }
   }
 
@@ -60,25 +64,39 @@
     font-size: g.$font-size-label;
     color: g.$gray-text;
     line-height: 1.5;
+    word-break: break-word;
+
+    @media (max-width: 390px) {
+      font-size: 0.75rem;
+      padding: 0.5em 0;
+    }
   }
 
   button {
     display: flex;
     justify-content: center;
+    align-items: center;
     gap: v.$spacing-md;
     max-width: fit-content;
     margin: 1em 0 0 0;
+    white-space: nowrap;
+
+    @media (max-width: 390px) {
+      gap: v.$spacing-sm;
+      font-size: 0.8rem;
+      padding: 0.4rem 0.75rem;
+    }
 
     transition: stroke 0.2s ease;
 
     &:hover {
-      // Schimbă textul și iconițele în alb
       color: g.$white;
 
       svg {
-        // Asigură-te că SVG-ul preia culoarea definită de părinte
-        stroke: currentColor;
-        fill: currentColor;
+        stroke: white;
+        path {
+          fill: white;
+        }
       }
     }
 
@@ -86,6 +104,6 @@
       transition:
         stroke 0.2s ease,
         fill 0.2s ease;
-    } // sau fill: g.$white; în funcție de SVG
+    }
   }
 }

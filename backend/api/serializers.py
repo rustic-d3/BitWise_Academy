@@ -1,4 +1,4 @@
-from api.models import User, TeacherProfile, ParentProfile
+from api.models import Classroom, Lesson, User, TeacherProfile, ParentProfile
 from rest_framework import serializers
 from django.core.validators import RegexValidator
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -91,6 +91,30 @@ class UserSerializer(serializers.ModelSerializer):
         if value and ParentProfile.objects.filter(phone_number=value).exists():
             raise serializers.ValidationError("This phone number is already in use.")
         return value
+
+
+# serializers.py
+
+class LessonSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Lesson
+        fields = ["id", "date_time", "is_canceled"]
+
+
+class ClassroomSerializer(serializers.ModelSerializer):
+    lessons = LessonSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Classroom
+        fields = ["id", "schedule_day", "schedule_time", "is_canceled", "lessons"]
+
+
+class TeacherProfileSerializer(serializers.ModelSerializer):
+    classrooms = ClassroomSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = TeacherProfile
+        fields = ["description", "teaching_module", "classrooms"]
     
     
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):

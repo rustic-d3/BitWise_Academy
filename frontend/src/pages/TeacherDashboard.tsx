@@ -4,7 +4,7 @@ import Navbar from "../components/Navbar";
 import { getUserRole } from "../helper-functions/DecodedToken";
 
 export default function TeacherDashboard() {
-  console.log(getUserRole());
+  const role = getUserRole()?.toLowerCase() as "teacher";
   return (
     <div className="page-wrapper">
       <Navbar role="teacher" />
@@ -13,9 +13,11 @@ export default function TeacherDashboard() {
           <InfoCard></InfoCard>
         </div>
         <div className="right-side-container">
-          <ClassSession />
-          <ClassSession />
-          <ClassSession />
+          <ClassSession role={role} />
+          <ClassSession role={role} />
+          <ClassSession role={role} />
+          <ClassSession role={role} />
+          <ClassSession role={role} />
         </div>
       </main>
     </div>
