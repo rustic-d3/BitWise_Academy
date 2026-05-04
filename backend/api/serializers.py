@@ -105,7 +105,8 @@ class UserSerializer(serializers.ModelSerializer):
 class LessonSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lesson
-        fields = ["id", "date_time", "is_canceled"]
+        fields = "__all__"
+        ordering = ["date_time"]
 
 class ChildProfileSerializer(serializers.ModelSerializer):
     class Meta:
@@ -115,6 +116,10 @@ class ChildProfileSerializer(serializers.ModelSerializer):
 class ClassroomSerializer(serializers.ModelSerializer):
     lessons = LessonSerializer(many=True, read_only=True)
     students = ChildProfileSerializer(many=True, read_only=True)
+    
+    def get_lessons(self, obj):
+        lessons = obj.lessons.filter(is_canceled=False).order_by("date_time")
+        return LessonSerializer(lessons, many=True).data
     class Meta:
         model = Classroom
         fields = ["id", "titlu", "students", "schedule_day", "schedule_time", "is_canceled", "lessons"]

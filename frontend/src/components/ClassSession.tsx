@@ -1,4 +1,3 @@
-import React from "react";
 import "../styles/class_session.scss";
 import type { LessonWithClassroom } from "../Types";
 
@@ -49,8 +48,6 @@ export default function ClassSession({ role, lesson }: Props) {
     day: "numeric",
     month: "short",
     year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
   });
 
   console.log(lesson);

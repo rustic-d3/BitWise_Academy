@@ -29,12 +29,17 @@ export default function TeacherDashboard() {
     getTeacherData();
   }, []);
 
-  const allLessons: LessonWithClassroom[] = classrooms.flatMap((classroom) =>
-    classroom.lessons.map((lesson) => ({
-      ...lesson,
-      classroom,
-    })),
-  );
+  const allLessons: LessonWithClassroom[] = classrooms
+    .flatMap((classroom) =>
+      classroom.lessons.map((lesson) => ({
+        ...lesson,
+        classroom,
+      })),
+    )
+    .sort(
+      (a, b) =>
+        new Date(a.date_time).getTime() - new Date(b.date_time).getTime(),
+    );
 
   return (
     <div className="page-wrapper">
