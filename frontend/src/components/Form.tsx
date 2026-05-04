@@ -62,7 +62,7 @@ export default function Form({ form_type, route }: FormProps) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setAuthError(""); // Clear previous errors
+    setAuthError(""); 
 
     if (isRegister && !validateForm()) return;
     const loginData = {
