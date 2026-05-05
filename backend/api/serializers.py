@@ -5,6 +5,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 
 class UserSerializer(serializers.ModelSerializer):    
+  
     phone_number = serializers.CharField(
         required=False,
         allow_blank=True,
@@ -24,7 +25,6 @@ class UserSerializer(serializers.ModelSerializer):
         }
     )
 
-    # Added as write-only fields to allow parsing them from the request without errors
     description = serializers.CharField(write_only=True, required=False, allow_blank=True)
     teaching_module = serializers.CharField(write_only=True, required=False, allow_blank=True)
 
@@ -42,14 +42,12 @@ class UserSerializer(serializers.ModelSerializer):
         if role == User.Role.ADMIN and not (request and request.user.is_superuser):
             role = User.Role.PARENT
 
-        # Pop from validated data
         phone_number = validated_data.pop('phone_number', None)
         description = validated_data.pop('description', None)
         teaching_module = validated_data.pop('teaching_module', None)
     
-        validated_data['role'] = role  # Enforce corrected role before creation
+        validated_data['role'] = role  #
         
-        # 1. Assign the phone_number directly to the validated data before creating the user
         if phone_number:
             validated_data['phone_number'] = phone_number
 
@@ -95,31 +93,63 @@ class UserSerializer(serializers.ModelSerializer):
         return value
     
     def validate_phone_number(self, value):
-        # Validate against User model instead of ParentProfile
         if value and User.objects.filter(phone_number=value).exists():
             raise serializers.ValidationError("This phone number is already in use.")
         return value
 
-# serializers.py
-
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        token["role"] = user.role
+        return token
+    
 class LessonSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lesson
         fields = "__all__"
         ordering = ["date_time"]
 
-class ChildProfileSerializer(serializers.ModelSerializer):
+
+class ChildProfileBasicSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChildProfile
-        fields = ["id", "full_name", "credits", "parent", "classroom"]  
+        fields = ["id", "full_name", "credits", "parent"]
         
+        
+class TeacherProfileBasicSerializer(serializers.ModelSerializer):
+    first_name = serializers.CharField(source="user.first_name", read_only=True)
+    last_name = serializers.CharField(source="user.last_name", read_only=True)
+
+    class Meta:
+        model = TeacherProfile
+        fields = ["first_name", "last_name", "description", "teaching_module"]
+
+class ClassroomBasicSerializer(serializers.ModelSerializer):
+    lessons = LessonSerializer(many=True, read_only=True)
+    students = ChildProfileBasicSerializer(many=True, read_only=True)
+    teacher = TeacherProfileBasicSerializer(read_only=True)
+
+    class Meta:
+        model = Classroom
+        fields = ["id", "titlu","teacher" , "students", "schedule_day", "schedule_time", "is_canceled", "lessons"]
+
+
+class ChildProfileSerializer(serializers.ModelSerializer):
+    classroom = ClassroomBasicSerializer(read_only=True)
+
+    class Meta:
+        model = ChildProfile
+        fields = ["id", "full_name", "credits", "parent", "classroom"]
+
+
 class ClassroomSerializer(serializers.ModelSerializer):
     lessons = LessonSerializer(many=True, read_only=True)
-    students = ChildProfileSerializer(many=True, read_only=True)
-    
+    students = ChildProfileBasicSerializer(many=True, read_only=True)
+
     def get_lessons(self, obj):
         lessons = obj.lessons.filter(is_canceled=False).order_by("date_time")
         return LessonSerializer(lessons, many=True).data
+
     class Meta:
         model = Classroom
         fields = ["id", "titlu", "students", "schedule_day", "schedule_time", "is_canceled", "lessons"]
@@ -129,30 +159,27 @@ class TeacherProfileSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(source="user.first_name", read_only=True)
     last_name = serializers.CharField(source="user.last_name", read_only=True)
     classrooms = ClassroomSerializer(many=True, read_only=True)
-    
 
     class Meta:
         model = TeacherProfile
         fields = ["first_name", "last_name", "description", "teaching_module", "classrooms"]
-        
 
-            
+
 class ParentProfileSerializer(serializers.ModelSerializer):
     children = ChildProfileSerializer(many=True, read_only=True)
     first_name = serializers.CharField(source="user.first_name", read_only=True)
     last_name = serializers.CharField(source="user.last_name", read_only=True)
     email = serializers.CharField(source="user.email", read_only=True)
     phone_number = serializers.CharField(source="user.phone_number", read_only=True)
-    
-    class Meta: 
+
+    class Meta:
         model = ParentProfile
         fields = "__all__"
 
-      
-  
+
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
-        token["role"] = user.role  
+        token["role"] = user.role
         return token

@@ -2,7 +2,7 @@ import "../styles/class_session.scss";
 import type { LessonWithClassroom } from "../Types";
 
 interface Props {
-  role: "teacher";
+  role: "teacher" | "parent";
   lesson: LessonWithClassroom;
 }
 
@@ -49,8 +49,6 @@ export default function ClassSession({ role, lesson }: Props) {
     month: "short",
     year: "numeric",
   });
-
-
 
   return (
     <div className="session-container">
