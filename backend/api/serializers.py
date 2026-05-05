@@ -111,7 +111,7 @@ class LessonSerializer(serializers.ModelSerializer):
 class ChildProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChildProfile
-        fields = ["id", "full_name", "credits", "parent"]
+        fields = ["id", "full_name", "credits", "parent", "classroom"]  
         
 class ClassroomSerializer(serializers.ModelSerializer):
     lessons = LessonSerializer(many=True, read_only=True)
@@ -134,8 +134,22 @@ class TeacherProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = TeacherProfile
         fields = ["first_name", "last_name", "description", "teaching_module", "classrooms"]
+        
+
+            
+class ParentProfileSerializer(serializers.ModelSerializer):
+    children = ChildProfileSerializer(many=True, read_only=True)
+    first_name = serializers.CharField(source="user.first_name", read_only=True)
+    last_name = serializers.CharField(source="user.last_name", read_only=True)
+    email = serializers.CharField(source="user.email", read_only=True)
+    phone_number = serializers.CharField(source="user.phone_number", read_only=True)
     
-    
+    class Meta: 
+        model = ParentProfile
+        fields = "__all__"
+
+      
+  
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):

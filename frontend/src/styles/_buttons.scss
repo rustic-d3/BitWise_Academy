@@ -26,6 +26,29 @@
   }
 }
 
+.btn--users--outline {
+  @extend %btn-base;
+  background-color: transparent;
+  border: 1.5px solid g.$primary-orange;
+  padding: 1em 3em !important;
+  color: g.$primary-orange;
+
+  &:hover {
+    background: g.$primary-gradient;
+    color: g.$white;
+  }
+}
+.btn--users--active {
+  @extend %btn-base;
+  background: g.$primary-gradient;
+  color: g.$white;
+  padding: 1em 3em !important;
+
+  &:hover {
+    filter: brightness(1.05);
+  }
+}
+
 .btn--outline {
   @extend %btn-base;
   background-color: transparent;

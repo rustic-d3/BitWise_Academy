@@ -20,6 +20,7 @@ export default function TeacherDashboard() {
         if (response.status === 200) {
           setTeacherData(response.data);
           setClassrooms(response.data.classrooms);
+          console.log(response.data);
         }
       } catch (error) {
         console.error("Failed to fetch teacher data:", error);

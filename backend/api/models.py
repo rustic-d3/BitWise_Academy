@@ -97,8 +97,6 @@ DAYS_MAP = {
 
 class Classroom(models.Model):
     
-        
-
     titlu = models.CharField(
         max_length=150,
         choices=ClassroomSubjects,

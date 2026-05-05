@@ -50,7 +50,7 @@ export default function ClassSession({ role, lesson }: Props) {
     year: "numeric",
   });
 
-  console.log(lesson);
+
 
   return (
     <div className="session-container">
