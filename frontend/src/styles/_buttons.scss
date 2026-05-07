@@ -38,6 +38,22 @@
     color: g.$white;
   }
 }
+.btn--users--chat {
+  @extend %btn-base;
+  background-color: transparent;
+  border: 1.5px solid g.$primary-orange;
+  color: g.$primary-orange;
+
+  &:hover {
+    background: g.$primary-gradient;
+    color: g.$white;
+    svg {
+      path {
+        stroke: g.$white;
+      }
+    }
+  }
+}
 .btn--users--active {
   @extend %btn-base;
   background: g.$primary-gradient;

@@ -1,5 +1,6 @@
 import "../styles/class_session.scss";
 import type { LessonWithClassroom } from "../Types";
+import { useNavigate } from "react-router-dom";
 
 interface Props {
   role: "teacher" | "parent";
@@ -49,6 +50,7 @@ export default function ClassSession({ role, lesson }: Props) {
     month: "short",
     year: "numeric",
   });
+  const navigate = useNavigate();
 
   return (
     <div className="session-container">
@@ -147,7 +149,10 @@ export default function ClassSession({ role, lesson }: Props) {
             </button>
           )}
 
-          <button className="btn--primary">
+          <button
+            className="btn--primary"
+            onClick={() => navigate("/classroom")}
+          >
             <svg
               width="10"
               height="11"

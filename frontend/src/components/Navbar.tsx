@@ -13,7 +13,8 @@ export default function Navbar({ role }: RoleProps) {
   const links = (
     <>
       <li>
-        <a href="#">Dashboard</a> {/* De schimbat aici mai tarziu la toate*/}
+        <a href="/dashboard">Dashboard</a>{" "}
+        {/* De schimbat aici mai tarziu la toate*/}
       </li>
       {isParent && (
         <li>

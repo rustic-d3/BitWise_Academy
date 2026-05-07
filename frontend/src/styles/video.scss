@@ -1,0 +1,30 @@
+@use "global" as g;
+@use "variables" as v;
+
+.main-container {
+  &--video {
+    display: flex;
+    flex-direction: column;
+    gap: 2em;
+  }
+}
+
+.teacher-video-container {
+  border: 2px solid rgba($color: #000000, $alpha: 0.25);
+  width: 100%;
+  aspect-ratio: 2 / 1.5;
+  background-color: #ddd;
+}
+.children-video-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  width: 100%;
+}
+
+.child-video {
+  width: 100%;
+  aspect-ratio: 2 / 1.5;
+  background-color: #ddd;
+  border: 2px solid rgba($color: #000000, $alpha: 0.25);
+}
