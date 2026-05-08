@@ -65,11 +65,42 @@
   }
 }
 
+.btn--rounded {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: g.$primary-gradient;
+  color: g.$white;
+  border-radius: 9999px;
+  width: 2em;
+  height: 2em;
+
+  &:hover {
+    filter: brightness(1.05);
+  }
+}
+
 .btn--outline {
   @extend %btn-base;
   background-color: transparent;
   border: 1.5px solid g.$primary-orange;
   color: g.$primary-orange;
+  &--black {
+    width: 30px;
+    height: 30px;
+    color: black;
+    border: 1.5px solid black;
+    padding: 0.5em;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    &:hover {
+      color: white;
+      background-color: g.$primary-orange;
+      border: 1.5px solid g.$primary-orange;
+    }
+  }
 
   &:hover {
     background-color: g.$primary-orange;
@@ -78,6 +109,12 @@
       fill: white;
     }
   }
+}
+.btn--outline--nohover {
+  @extend %btn-base;
+  background-color: transparent;
+  border: 1.5px solid g.$primary-orange;
+  color: g.$primary-orange;
 }
 .btn--outline--red {
   @extend %btn-base;

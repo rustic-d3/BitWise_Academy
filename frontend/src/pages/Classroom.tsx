@@ -1,10 +1,27 @@
-import React from "react";
+import React, { useEffect } from "react";
 import Navbar from "../components/Navbar";
-import Video from "../components/VideoComponent";
 import "../styles/classroom.scss";
 import VideoComponent from "../components/VideoComponent";
+import { useNavigate, useParams } from "react-router-dom";
+import WhiteBoard from "../components/WhiteBoard";
+import api from "../api";
 
 export default function Classroom() {
+  const { lessonId } = useParams<{ lessonId: string }>();
+  const [agoraConfig, setAgoraConfig] = React.useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchSessionPass = async () => {
+      try {
+        const response = await api.get(`/api/lessons/${lessonId}/join/`);
+        setAgoraConfig(response.data.agora_data);
+      } catch (err) {
+        console.error("Could not join session", err);
+      }
+    };
+    if (lessonId) fetchSessionPass();
+  }, [lessonId]);
   return (
     <div className="page-wrapper">
       <Navbar role="parent" />
@@ -80,9 +97,116 @@ export default function Classroom() {
             </div>
           </div>
           {/* Chat/Video */}
-          <VideoComponent />
+          <VideoComponent config={agoraConfig} lessonId={lessonId} />
         </div>
-        <div className="right-side-container--classroom"></div>
+        <div className="right-side-container--classroom">
+          <div className="row--1">
+            <div className="buttons-section">
+              <button className="btn--users--outline">Tab1</button>
+              <button className="btn--users--outline">Tab2</button>
+              <button className="btn--users--active">Tab3</button>
+              <button className="btn--rounded">
+                <svg
+                  width="12"
+                  height="11"
+                  viewBox="0 0 12 11"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M0.75 5.25H10.8929H0.75ZM5.82143 0.75V9.75V0.75Z"
+                    fill="url(#paint0_linear_1_2820)"
+                  />
+                  <path
+                    d="M0.75 5.25H10.8929M5.82143 0.75V9.75"
+                    stroke="white"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <defs>
+                    <linearGradient
+                      id="paint0_linear_1_2820"
+                      x1="5.82143"
+                      y1="0.75"
+                      x2="5.82143"
+                      y2="9.75"
+                      gradientUnits="userSpaceOnUse"
+                    >
+                      <stop stop-color="#FF6116" />
+                      <stop offset="1" stop-color="#FF388C" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+              </button>
+            </div>
+            <div className="buttons-section">
+              <button
+                className="btn--primary"
+                onClick={() => navigate("/dashboard")}
+              >
+                <svg
+                  width="10"
+                  height="11"
+                  viewBox="0 0 10 11"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M2.86621 0.573059H8.59707V8.59623C8.59707 9.22926 8.08393 9.74241 7.4509 9.74241H2.86621"
+                    stroke="white"
+                    stroke-width="1.14617"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <path
+                    d="M4.58484 6.87721L6.3041 5.15795M6.3041 5.15795L4.58484 3.43872M6.3041 5.15795H0.573242"
+                    stroke="white"
+                    stroke-width="1.14617"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                Părăsește ora
+              </button>
+              <button className="btn--outline--nohover">
+                <svg
+                  width="17"
+                  height="17"
+                  viewBox="0 0 17 17"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <g clip-path="url(#clip0_1_2836)">
+                    <path
+                      d="M4.20377 1.54813L1.54752 4.20438L0.0449219 2.70178L2.70118 0.0455322L4.20377 1.54813Z"
+                      fill="#FF6116"
+                    />
+                    <path
+                      fill-rule="evenodd"
+                      clip-rule="evenodd"
+                      d="M15.4056 9.03125C15.4056 10.418 14.9968 11.7094 14.2933 12.7913L16.6881 15.1862L15.1855 16.6888L12.873 14.3763C11.6821 15.352 10.1591 15.9375 8.4993 15.9375C6.83957 15.9375 5.31658 15.352 4.1256 14.3763L1.81314 16.6888L0.310547 15.1862L2.7054 12.7913C2.0018 11.7094 1.59305 10.418 1.59305 9.03125C1.59305 5.21703 4.68508 2.125 8.4993 2.125C12.3135 2.125 15.4056 5.21703 15.4056 9.03125ZM7.43689 5.31247V10.0026L9.8731 12.4388L11.3757 10.9362L9.56189 9.12237V5.31247H7.43689Z"
+                      fill="#FF6116"
+                    />
+                    <path
+                      d="M15.4512 4.20451L12.7949 1.54826L14.2975 0.0456543L16.9538 2.7019L15.4512 4.20451Z"
+                      fill="#FF6116"
+                    />
+                  </g>
+                  <defs>
+                    <clipPath id="clip0_1_2836">
+                      <rect width="17" height="17" fill="white" />
+                    </clipPath>
+                  </defs>
+                </svg>
+                59 : 48
+              </button>
+            </div>
+          </div>
+          <div className="row--2">
+            <WhiteBoard />
+          </div>
+        </div>
       </main>
     </div>
   );

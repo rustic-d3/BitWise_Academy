@@ -1,0 +1,20 @@
+@use "buttons";
+
+.whiteboard-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.content-container {
+  flex: 1;
+  min-height: 0;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+}
+
+.pdf-pagination {
+  display: flex;
+  gap: 0.3em;
+  margin-bottom: 0.5em;
+}

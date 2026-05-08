@@ -14,7 +14,10 @@
   width: 100%;
   aspect-ratio: 2 / 1.5;
   background-color: #ddd;
+  position: relative; // necesar pentru Agora
+  overflow: hidden; // necesar pentru Agora
 }
+
 .children-video-container {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -27,4 +30,6 @@
   aspect-ratio: 2 / 1.5;
   background-color: #ddd;
   border: 2px solid rgba($color: #000000, $alpha: 0.25);
+  position: relative; // necesar pentru Agora
+  overflow: hidden; // necesar pentru Agora
 }

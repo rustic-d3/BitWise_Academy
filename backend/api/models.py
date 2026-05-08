@@ -131,11 +131,19 @@ class Lesson(models.Model):
     )
     date_time = models.DateTimeField()
     is_canceled = models.BooleanField(default=False)
+    
+    channel_name = models.CharField(max_length=255, unique=True, blank=True, null=True )
 
     class Meta:
         verbose_name = "Lesson"
         verbose_name_plural = "Lessons"
-
+        
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if not self.channel_name:
+            self.channel_name = f"lesson_{self.id}_{self.classroom.id}"
+            super().save(*args, **kwargs)
+        
     def cancel_and_reschedule(self, new_datetime):
         self.is_canceled = True
         self.save()

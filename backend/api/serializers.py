@@ -1,7 +1,11 @@
+import time
+
 from api.models import ChildProfile, Classroom, Lesson, User, TeacherProfile, ParentProfile
 from rest_framework import serializers
 from django.core.validators import RegexValidator
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from agora_token_builder import RtcTokenBuilder
+import os
 
 
 class UserSerializer(serializers.ModelSerializer):    
@@ -109,6 +113,40 @@ class LessonSerializer(serializers.ModelSerializer):
         fields = "__all__"
         ordering = ["date_time"]
 
+class LessonJoinSerializer(serializers.ModelSerializer):
+    agora_data = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Lesson
+        fields = ['id', 'channel_name', 'date_time', 'agora_data']
+
+    def get_agora_data(self, obj):
+
+        app_id = os.getenv("AGORA_APP_ID")
+        app_certificate = os.getenv("AGORA_APP_CERTIFICATE")
+        
+        user = self.context['request'].user
+        uid = user.id 
+        
+
+        role = 1 if str(user.role).lower() == "teacher" else 2
+
+        expiration_time = 3600
+        current_timestamp = int(time.time())
+        privilege_expired_ts = current_timestamp + expiration_time
+
+        token = RtcTokenBuilder.buildTokenWithUid(
+            app_id, app_certificate, obj.channel_name, uid, role, privilege_expired_ts
+        )
+
+        return {
+            "token": token,
+            "uid": uid,
+            "appId": app_id,
+            "channel": obj.channel_name,
+            "teacherUid": obj.classroom.teacher.user.id,
+            
+        }
 
 class ChildProfileBasicSerializer(serializers.ModelSerializer):
     class Meta:

@@ -1,7 +1,7 @@
 
 from django.contrib import admin
 from django.urls import path, include
-from api.views import ChildProfileView, CreateUserView, TeacherProfileView,ParentProfileView, CreateClassroomView
+from api.views import ChildProfileView, CreateUserView, LessonJoinView, TeacherProfileView,ParentProfileView, CreateClassroomView, close_channel
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
@@ -20,6 +20,8 @@ urlpatterns = [
     path("api/child/<int:id>/", ChildProfileView.as_view(), name="child_profile"),
     # clasrooms urls
     path("api/classroom/create", CreateClassroomView.as_view(), name="create_classroom"),
+    path('api/lessons/<int:id>/join/', LessonJoinView.as_view(), name='lesson_join'),
+    path("api/lessons/<int:lesson_id>/close-channel/", close_channel, name="close_channel"),
 
     
     

@@ -51,6 +51,10 @@ export default function ClassSession({ role, lesson }: Props) {
     year: "numeric",
   });
   const navigate = useNavigate();
+  const handleJoin = () => {
+    console.log("here");
+    navigate(`/classroom/${lesson.id}`);
+  };
 
   return (
     <div className="session-container">
@@ -149,10 +153,7 @@ export default function ClassSession({ role, lesson }: Props) {
             </button>
           )}
 
-          <button
-            className="btn--primary"
-            onClick={() => navigate("/classroom")}
-          >
+          <button className="btn--primary" onClick={() => handleJoin()}>
             <svg
               width="10"
               height="11"
