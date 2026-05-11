@@ -1,0 +1,110 @@
+// styles/not-found.scss
+@use "global" as g;
+
+.not-found-wrapper {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  position: relative;
+  background-color: #ffffff;
+  text-align: center;
+  padding: 20px;
+
+  .not-found-content {
+    z-index: 2;
+    max-width: 600px;
+
+    h1 {
+      font-size: 8rem;
+      font-weight: 900;
+      margin: 0;
+      color: g.$primary-orange;
+      line-height: 1;
+      letter-spacing: -5px;
+
+      text-shadow: 4px 4px 0px rgba(g.$primary-pink, 0.2);
+    }
+
+    h2 {
+      font-size: 2rem;
+      color: #2d2d2d;
+      margin: 1.5rem 0 1rem;
+    }
+
+    p {
+      color: #666;
+      font-size: 1.1rem;
+      margin-bottom: 2.5rem;
+      line-height: 1.6;
+    }
+
+    .actions {
+      display: flex;
+      gap: 1.5rem;
+      justify-content: center;
+
+      .btn-primary {
+        background-color: g.$primary-orange;
+        color: white;
+        padding: 0.8rem 2rem;
+        border-radius: 50px;
+        text-decoration: none;
+        font-weight: bold;
+        transition: all 0.3s ease;
+
+        &:hover {
+          background-color: darken(g.$primary-orange, 10%);
+          transform: scale(1.05);
+        }
+      }
+
+      .btn-secondary {
+        border: 2px solid g.$primary-pink;
+        color: g.$primary-pink;
+        padding: 0.8rem 2rem;
+        border-radius: 50px;
+        text-decoration: none;
+        font-weight: bold;
+        transition: all 0.3s ease;
+
+        &:hover {
+          background-color: g.$primary-pink;
+          color: white;
+        }
+      }
+    }
+  }
+
+  // Elemente decorative de fundal (Cercuri difuze)
+  .background-elements {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+
+    .circle {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.15;
+    }
+
+    .orange {
+      width: 400px;
+      height: 400px;
+      background: g.$primary-orange;
+      top: -100px;
+      right: -100px;
+    }
+
+    .pink {
+      width: 300px;
+      height: 300px;
+      background: g.$primary-pink;
+      bottom: -50px;
+      left: -50px;
+    }
+  }
+}

@@ -1,0 +1,208 @@
+@use "global" as g;
+@import url("https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap");
+
+// Variables
+$font-family: "Sansation", sans-serif;
+$white: #ffffff;
+$white-90: rgba(255, 255, 255, 0.9);
+$white-75: rgba(255, 255, 255, 0.75);
+$white-60: rgba(255, 255, 255, 0.6);
+$white-20: rgba(255, 255, 255, 0.2);
+$white-15: rgba(255, 255, 255, 0.15);
+$white-12: rgba(255, 255, 255, 0.12);
+$white-08: rgba(255, 255, 255, 0.08);
+$black-cta: #0d0d0d;
+
+$card-max-width: 340px;
+$card-radius: 24px;
+$cta-radius: 3px;
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Card
+.pricing-card {
+  position: relative;
+  width: 100%;
+  max-width: $card-max-width;
+  height: 400px;
+
+  display: flex;
+  flex-direction: column;
+
+  border-radius: $card-radius;
+  padding: 32px 28px 28px;
+  font-family: $font-family;
+
+  backdrop-filter: blur(15px) saturate(130%);
+  -webkit-backdrop-filter: blur(15px) saturate(130%);
+  background: $white-08;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.25),
+    0 0 0 1px $white-12;
+  animation: fadeInUp 0.6s ease both;
+  transition:
+    transform 0.35s cubic-bezier(0.22, 0.68, 0, 1.2),
+    box-shadow 0.35s ease;
+
+  &:hover {
+    transform: translateY(-4px) scale(1.015);
+    box-shadow:
+      0 32px 80px rgba(0, 0, 0, 0.35),
+      0 0 0 1px rgba(255, 255, 255, 0.18);
+  }
+
+  &__highlight {
+    position: absolute;
+    inset: 0;
+    border-radius: $card-radius;
+    background: linear-gradient(135deg, $white-15 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  &__label {
+    font-size: 18px;
+    font-weight: 700;
+    color: $white;
+    letter-spacing: 0.01em;
+    margin: 0 0 14px;
+  }
+
+  &__price-row {
+    display: flex;
+    align-items: flex-end;
+    margin-bottom: 10px;
+  }
+
+  &__price {
+    font-size: 52px;
+    font-weight: 800;
+    color: $white;
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+
+  &__per-user {
+    font-size: 15px;
+    color: $white-75;
+    font-weight: 500;
+    padding-bottom: 6px;
+  }
+
+  &__subtitle {
+    font-size: 12.5px;
+    color: $white-60;
+    font-weight: 400;
+    line-height: 1.5;
+    font-style: italic;
+    margin: 0 0 20px;
+  }
+
+  &__divider {
+    height: 1px;
+    background: linear-gradient(to right, transparent, $white-20, transparent);
+    margin-bottom: 20px;
+  }
+
+  &__features {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    flex-grow: 1;
+  }
+
+  &__feature {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  &__feature-text {
+    font-size: 14px;
+    color: $white-90;
+    font-weight: 500;
+  }
+
+  %btn-base {
+    width: 100%;
+    padding: 15px 0;
+    border-radius: $cta-radius;
+    border: none;
+    font-size: 16px;
+    font-weight: 700;
+    font-family: $font-family;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    margin-top: auto;
+    transition:
+      background 0.25s ease,
+      transform 0.15s ease,
+      opacity 0.2s ease;
+
+    &:active {
+      transform: scale(0.98);
+    }
+  }
+
+  &--black {
+    @extend %btn-base;
+    background: $black-cta;
+    color: $white;
+
+    &:hover {
+      background: linear-gradient(135deg, #1a1a1a 0%, #333 100%);
+      opacity: 0.92;
+    }
+  }
+
+  &--premium {
+    @extend %btn-base;
+    color: $white;
+    background: linear-gradient(
+      135deg,
+      g.$primary-orange 0%,
+      g.$primary-pink 100%
+    );
+    border: 2px solid rgba(0, 0, 0, 0.25);
+
+    &:hover {
+      background: linear-gradient(
+        135deg,
+        darken(g.$primary-orange, 8%) 0%,
+        darken(g.$primary-pink, 8%) 100%
+      );
+      opacity: 0.92;
+    }
+  }
+
+  @media (max-width: 400px) {
+    padding: 24px 20px 20px;
+
+    &__price {
+      font-size: 42px;
+    }
+
+    &__feature-text {
+      font-size: 13px;
+    }
+  }
+}
+
+.check-icon {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+}

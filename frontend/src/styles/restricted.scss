@@ -1,0 +1,86 @@
+// styles/restricted.scss
+@use "global" as g; // Asigură-te că importul culorilor este corect
+
+.restricted-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: radial-gradient(circle, #fff 0%, #f9f9f9 100%);
+  padding: 20px;
+
+  .restricted-card {
+    background: white;
+    padding: 3rem;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    text-align: center;
+    max-width: 500px;
+    width: 100%;
+    border-top: 5px solid g.$primary-orange;
+
+    .icon-box {
+      background: rgba(g.$primary-orange, 0.1);
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0 auto 1.5rem;
+
+      .lock-icon {
+        font-size: 2.5rem;
+      }
+    }
+
+    h1 {
+      color: #2d2d2d;
+      margin-bottom: 1rem;
+      font-size: 1.8rem;
+    }
+
+    p {
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 2rem;
+
+      strong {
+        color: g.$primary-pink;
+      }
+    }
+
+    .actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+
+      .btn-home,
+      .btn-login {
+        padding: 0.8rem 1.5rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+      }
+
+      .btn-home {
+        background: g.$primary-orange;
+        color: white;
+      }
+
+      .btn-login {
+        background: transparent;
+        border: 2px solid g.$primary-pink;
+        color: g.$primary-pink;
+      }
+    }
+  }
+}

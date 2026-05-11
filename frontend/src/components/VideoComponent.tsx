@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import AgoraRTC, {
   type ICameraVideoTrack,
   type IAgoraRTCRemoteUser,
@@ -24,45 +24,30 @@ export default function VideoComponent({ config, lessonId }: Props) {
   const teacherVideoRef = useRef<HTMLDivElement | null>(null);
   const teacherVideoTrackRef = useRef<any>(null);
   const remoteVideoRefs = useRef<{ [uid: string]: HTMLDivElement | null }>({});
+  const videoTracksRef = useRef<{ [uid: string]: any }>({});
 
   const teacherUid = config?.teacherUid;
   const isCurrentUserTeacher = config?.uid === teacherUid;
   const teacherRemote = remoteUsers.find((u) => u.uid === teacherUid);
   const studentRemotes = remoteUsers.filter((u) => u.uid !== teacherUid);
 
-  // Redă video-ul profesorului remote după ce DOM-ul e actualizat
-  useEffect(() => {
-    if (teacherVideoRef.current && teacherVideoTrackRef.current) {
-      teacherVideoTrackRef.current.play(teacherVideoRef.current);
-    }
-  }, [teacherRemote]);
-
-  // Redă video-urile studenților remote după ce DOM-ul e actualizat
-  useEffect(() => {
-    studentRemotes.forEach((user) => {
-      const ref = remoteVideoRefs.current[user.uid];
-      if (ref && user.videoTrack) {
-        user.videoTrack.play(ref);
-      }
-    });
-  }, [remoteUsers]);
-
-  // Când toți userii au plecat, închide canalul pe backend
-  useEffect(() => {
-    if (remoteUsers.length === 0 && localVideoTrack && lessonId) {
-      api.post(`/api/lessons/${lessonId}/close-channel/`).catch((err) => {
-        console.error("Nu s-a putut închide canalul:", err);
-      });
-    }
-  }, [remoteUsers]);
-
-  // Redă local video după ce track-ul și ref-ul sunt disponibile
+  // Play local video once track and ref are ready
   useEffect(() => {
     if (localVideoTrack && localVideoRef.current) {
       localVideoTrack.play(localVideoRef.current);
     }
   }, [localVideoTrack]);
 
+  // Close channel on backend when everyone leaves
+  useEffect(() => {
+    if (remoteUsers.length === 0 && localVideoTrack && lessonId) {
+      api.post(`/api/lessons/${lessonId}/close-channel/`).catch((err) => {
+        console.error("Could not close channel:", err);
+      });
+    }
+  }, [remoteUsers]);
+
+  // Main setup and teardown
   useEffect(() => {
     let isActive = true;
 
@@ -76,13 +61,22 @@ export default function VideoComponent({ config, lessonId }: Props) {
           }
 
           if (mediaType === "video") {
+            // Save track in ref immediately after subscribe
+            videoTracksRef.current[user.uid] = user.videoTrack;
+            console.log("=== user-published video ===");
+            console.log("user.uid:", user.uid, typeof user.uid);
+            console.log("teacherUid:", teacherUid, typeof teacherUid);
+            console.log("user.videoTrack:", user.videoTrack);
+
             if (user.uid === teacherUid) {
               teacherVideoTrackRef.current = user.videoTrack;
             }
+
             setRemoteUsers((prev) =>
               prev.find((u) => u.uid === user.uid) ? prev : [...prev, user],
             );
           }
+
           if (mediaType === "audio") {
             user.audioTrack?.play();
           }
@@ -93,6 +87,7 @@ export default function VideoComponent({ config, lessonId }: Props) {
         });
 
         client.on("user-left", (user) => {
+          delete videoTracksRef.current[user.uid];
           if (user.uid === teacherUid) {
             teacherVideoTrackRef.current = null;
           }
@@ -121,7 +116,7 @@ export default function VideoComponent({ config, lessonId }: Props) {
         setLocalVideoTrack(videoTrack);
         await client.publish([audioTrack, videoTrack]);
       } catch (err) {
-        console.error("Eroare la setup:", err);
+        console.error("Error during setup:", err);
       }
     };
 
@@ -137,28 +132,34 @@ export default function VideoComponent({ config, lessonId }: Props) {
 
   return (
     <div className="main-container--video">
-      {/* TEACHER VIDEO (sus) */}
+      {/* TEACHER VIDEO (top) */}
       <div className="teacher-video-container">
         {isCurrentUserTeacher ? (
           <div ref={localVideoRef} style={{ width: "100%", height: "100%" }}>
             {!localVideoTrack && <p>Se încarcă camera...</p>}
           </div>
-        ) : teacherRemote ? (
-          <div
-            ref={(node) => {
-              teacherVideoRef.current = node;
-              if (node && teacherVideoTrackRef.current) {
-                teacherVideoTrackRef.current.play(node);
-              }
-            }}
-            style={{ width: "100%", height: "100%" }}
-          />
         ) : (
-          <p>Profesorul nu s-a conectat încă...</p>
+          <>
+            {/* Always in DOM — never unmounts */}
+            <div
+              style={{
+                width: "100%",
+                height: "100%",
+                display: teacherRemote ? "block" : "none",
+              }}
+              ref={(node) => {
+                teacherVideoRef.current = node;
+                if (node && teacherVideoTrackRef.current) {
+                  teacherVideoTrackRef.current.play(node);
+                }
+              }}
+            />
+            {!teacherRemote && <p>Profesorul nu s-a conectat încă...</p>}
+          </>
         )}
       </div>
 
-      {/* STUDENT VIDEOS (jos) */}
+      {/* STUDENT VIDEOS (bottom) */}
       <div className="children-video-container">
         {!isCurrentUserTeacher && (
           <div ref={localVideoRef} className="child-video">
@@ -168,12 +169,12 @@ export default function VideoComponent({ config, lessonId }: Props) {
 
         {studentRemotes.map((user: IAgoraRTCRemoteUser) => (
           <div
-            key={user.uid}
+            key={user.uid} // ← make sure this is stable
             className="child-video"
             ref={(node) => {
               remoteVideoRefs.current[user.uid] = node;
-              if (node && user.videoTrack) {
-                user.videoTrack.play(node);
+              if (node && videoTracksRef.current[user.uid]) {
+                videoTracksRef.current[user.uid].play(node);
               }
             }}
           />

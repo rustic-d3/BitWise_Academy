@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import "../styles/_navbar.scss";
 import handleLogout from "../helper-functions/Logout";
 
@@ -9,6 +9,7 @@ interface RoleProps {
 export default function Navbar({ role }: RoleProps) {
   const isParent = role === "parent";
   const [menuOpen, setMenuOpen] = useState(false);
+  const hasChildren = localStorage.getItem("childrenNumber") != "0";
 
   const links = (
     <>
@@ -16,14 +17,19 @@ export default function Navbar({ role }: RoleProps) {
         <a href="/dashboard">Dashboard</a>{" "}
         {/* De schimbat aici mai tarziu la toate*/}
       </li>
-      {isParent && (
+      {isParent && hasChildren && (
         <li>
           <a href="#">Recuperare</a>
         </li>
       )}
-      {isParent && (
+      {isParent && hasChildren && (
         <li>
           <a href="#">Feedback-ul meu</a>
+        </li>
+      )}
+      {isParent && !hasChildren && (
+        <li>
+          <a href="/subscriptions">Oferte</a>
         </li>
       )}
       {!isParent && (

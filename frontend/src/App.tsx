@@ -10,6 +10,11 @@ import ParentDashboard from "./pages/ParentDashboard";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import { getUserRole } from "./helper-functions/DecodedToken";
 import Classroom from "./pages/Classroom";
+import RestrictedPage from "./pages/RestrictedPage";
+import ParentProtectedRoute from "./components/ParentProtectedRoute";
+import Subscriptions from "./pages/SubscriptionsPage";
+import SubscriptionsPage from "./pages/SubscriptionsPage";
+import AddChildPage from "./pages/AddChildPage";
 
 function LogOutAndRegister() {
   localStorage.clear();
@@ -54,6 +59,34 @@ function App() {
             element={
               <ProtectedRoute>
                 <Classroom />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/restricted-page"
+            element={
+              <ProtectedRoute>
+                <RestrictedPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/subscriptions"
+            element={
+              <ProtectedRoute>
+                <ParentProtectedRoute>
+                  <SubscriptionsPage />
+                </ParentProtectedRoute>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/subscription-form"
+            element={
+              <ProtectedRoute>
+                <ParentProtectedRoute>
+                  <AddChildPage credits={0} />
+                </ParentProtectedRoute>
               </ProtectedRoute>
             }
           />

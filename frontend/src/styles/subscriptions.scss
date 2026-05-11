@@ -1,0 +1,46 @@
+@use "global" as g;
+@use "variables" as v;
+
+.page-wrapper-subscriptions {
+  position: relative;
+  height: 100vh;
+  width: 100%;
+}
+
+.page-wrapper-subscriptions::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+
+  background-image: url("/subscription_background.svg");
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+}
+
+.main-content-subscriptions {
+  background: transparent;
+  height: 100%;
+  display: flex;
+
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+
+  gap: 32px;
+  padding: 80px 24px;
+  flex-wrap: wrap;
+  max-width: 1200px;
+  margin: 0 auto;
+
+  @media (max-width: v.$breakpoint-mobile) {
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+    padding: 60px 20px;
+  }
+}

@@ -60,3 +60,56 @@ body {
     gap: 2em;
   }
 }
+
+.no-data-container {
+  // Use display flex to center the content in the middle of the screen
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  // Give it some height so it's not squashed at the top
+  min-height: 60vh;
+  width: 90%;
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 3rem;
+
+  // Subtle styling instead of solid black border
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  text-align: center;
+
+  h1 {
+    color: g.$primary-orange;
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    line-height: 1.2;
+  }
+
+  p {
+    font-size: 1.2rem;
+    color: #555;
+    max-width: 500px;
+  }
+
+  span a {
+    color: g.$primary-pink;
+    text-decoration: none;
+    font-weight: bold;
+    border-bottom: 2px solid transparent;
+    transition: border-color 0.3s;
+
+    &:hover {
+      border-color: g.$primary-pink;
+    }
+  }
+
+  // Suggestion: Add a subtle illustration or icon here
+  &::before {
+    content: url("/logo.svg");
+    font-size: 4rem;
+    margin-bottom: 1rem;
+  }
+}

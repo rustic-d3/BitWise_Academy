@@ -1,5 +1,5 @@
-@use "variables" as v;
 @use "global" as g;
+@use "variables" as v;
 
 // stiluri comune
 %btn-base {
@@ -132,4 +132,9 @@
       }
     }
   }
+}
+.btn--dark {
+  @extend %btn-base;
+  color: g.$white;
+  background: g.$black;
 }
