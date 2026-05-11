@@ -1,0 +1,28 @@
+# Python
+venv/
+env/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+db.sqlite3
+
+# Node
+node_modules/
+
+# Environment
+.env
+
+# Editor
+.vscode/
+
+# Git
+.git
+.gitignore
+
+# Docs
+README.md
+
+Dockerfile
+.dockerignore

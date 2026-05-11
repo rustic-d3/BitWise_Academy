@@ -1,0 +1,42 @@
+services:
+  frontend:
+    image: rusticd3/bitwise-frontend
+    env_file:
+      - ./frontend/.env
+    build:
+      context: ./frontend
+    ports:
+      - 5173:5173
+    develop:
+      watch:
+        - path: ./frontend
+          action: sync
+          target: /app
+          ignore:
+            - node_modules/
+            - .env
+        - path: ./frontend/package.json
+          action: rebuild
+        - path: ./frontend/package-lock.json
+          action: rebuild
+  backend:
+    image: rusticd3/bitwise-backend
+    env_file:
+      - ./backend/.env
+    build:
+      context: ./backend
+    ports:
+      - 8000:8000
+    develop:
+      watch:
+        - path: ./backend
+          action: sync
+          target: /app
+          ignore:
+            - .env
+            - venv/
+            - env/
+            - __pycache__
+
+        - path: ./backend/requirements.txt
+          action: rebuild
