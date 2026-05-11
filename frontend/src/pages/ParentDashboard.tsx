@@ -69,6 +69,7 @@ export default function ParentDashboard() {
       <Navbar role="parent" />
       <main className="main-content">
         <div className="left-side-container">
+          <h2>Profesorul copilului:</h2>
           <InfoCard data={activeChildTeacher} />
         </div>
         <div className="right-side-container">
