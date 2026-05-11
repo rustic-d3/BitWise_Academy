@@ -16,6 +16,7 @@ export default function Classroom() {
       try {
         const response = await api.get(`/api/lessons/${lessonId}/join/`);
         setAgoraConfig(response.data.agora_data);
+        console.log(response.data.agora_data);
       } catch (err) {
         console.error("Could not join session", err);
       }

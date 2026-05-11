@@ -145,7 +145,12 @@ export default function VideoComponent({ config, lessonId }: Props) {
           </div>
         ) : teacherRemote ? (
           <div
-            ref={teacherVideoRef}
+            ref={(node) => {
+              teacherVideoRef.current = node;
+              if (node && teacherVideoTrackRef.current) {
+                teacherVideoTrackRef.current.play(node);
+              }
+            }}
             style={{ width: "100%", height: "100%" }}
           />
         ) : (
@@ -165,8 +170,11 @@ export default function VideoComponent({ config, lessonId }: Props) {
           <div
             key={user.uid}
             className="child-video"
-            ref={(ref) => {
-              remoteVideoRefs.current[user.uid] = ref;
+            ref={(node) => {
+              remoteVideoRefs.current[user.uid] = node;
+              if (node && user.videoTrack) {
+                user.videoTrack.play(node);
+              }
             }}
           />
         ))}
