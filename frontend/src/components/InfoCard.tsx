@@ -11,7 +11,7 @@ interface InfoCardProps {
 }
 export default function InfoCard({ data }: InfoCardProps) {
   if (!data) {
-    return <div>Loading card...</div>;
+    return <div></div>;
   }
   return (
     <div className="card-container">

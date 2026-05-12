@@ -19,6 +19,9 @@ export default function SubscriptionsPage() {
       <Navbar role="parent" />
 
       <main className="main-content-subscriptions">
+        <h1 className="main-title">
+          Alege oferta potrivită pentru copilul tău!
+        </h1>
         <PricingCard
           cardId={1}
           title="Pachetul lunar"

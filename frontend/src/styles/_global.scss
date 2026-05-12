@@ -62,6 +62,16 @@ body {
   min-height: 100vh;
   width: 100%;
 }
+
+.uninteractive-div {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+
+  /* Disables all mouse interactions (clicks, hovers, right-clicks) */
+  pointer-events: none;
+}
 .main-content {
   width: 90%;
   max-width: 1700px;

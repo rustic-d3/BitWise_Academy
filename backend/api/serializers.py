@@ -152,8 +152,7 @@ class ChildProfileBasicSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChildProfile
         fields = ["id", "full_name", "credits", "parent"]
-        
-        
+                
 class TeacherProfileBasicSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(source="user.first_name", read_only=True)
     last_name = serializers.CharField(source="user.last_name", read_only=True)
@@ -171,13 +170,13 @@ class ClassroomBasicSerializer(serializers.ModelSerializer):
         model = Classroom
         fields = ["id", "titlu","teacher" , "students", "schedule_day", "schedule_time", "is_canceled", "lessons"]
 
-
 class ChildProfileSerializer(serializers.ModelSerializer):
     classroom = ClassroomBasicSerializer(read_only=True)
 
     class Meta:
         model = ChildProfile
-        fields = ["id", "full_name", "credits", "parent", "classroom"]
+        fields = ["id", "full_name", "credits", "parent", "classroom", "age"]
+        read_only_fields = ["id", "parent"]
 
 
 class ClassroomSerializer(serializers.ModelSerializer):

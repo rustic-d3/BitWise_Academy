@@ -27,7 +27,7 @@ export default function Navbar({ role }: RoleProps) {
           <a href="#">Feedback-ul meu</a>
         </li>
       )}
-      {isParent && !hasChildren && (
+      {isParent && (
         <li>
           <a href="/subscriptions">Oferte</a>
         </li>

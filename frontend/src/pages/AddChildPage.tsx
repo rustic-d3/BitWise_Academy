@@ -1,25 +1,116 @@
-interface AddChildPageProps {
-  credits: number;
-}
-
 import "../styles/subscriptions.scss";
 import "../styles/addChildForm.scss";
 import Navbar from "../components/Navbar";
 import { useNavigate, Navigate, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
+import api from "../api";
 
-export default function AddChildPage({ credits }: AddChildPageProps) {
+export default function AddChildPage() {
   const location = useLocation();
   const navigate = useNavigate();
+
+  const [children, setChildren] = useState<any[]>([]);
+  const [selectedChildId, setSelectedChildId] = useState<string>("");
+  const [isAddingNew, setIsAddingNew] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  const [formData, setFormData] = useState({
+    childName: "",
+    childSurname: "",
+    childAge: "",
+  });
+
+  const searchParams = new URLSearchParams(location.search);
+  const cardId = searchParams.get("cardId") || searchParams.get("cardId");
+
+  let credits = 0;
+  if (cardId === "1") {
+    credits = 4;
+  } else if (cardId === "2") {
+    credits = 12;
+  }
+
+  useEffect(() => {
+    async function fetchParentData() {
+      try {
+        const response = await api.get("api/parent/profile");
+        const parentChildren = response.data.children;
+        setChildren(parentChildren);
+
+        if (parentChildren.length > 0) {
+          setSelectedChildId(parentChildren[0].id.toString());
+        } else {
+          setIsAddingNew(true);
+        }
+      } catch (error) {
+        console.error("Eroare la preluarea copiilor:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchParentData();
+  }, []);
+
   const cancel = (e: any) => {
     e.preventDefault();
     navigate("/dashboard");
   };
 
+  const handleChange = (e: any) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
   if (!location.state?.fromRestricted) {
     return <Navigate to="/dashboard" replace />;
   }
-  function handleSubmit(event: any): void {
+
+  async function handleSubmit(event: any) {
     event.preventDefault();
+
+    try {
+      if (isAddingNew) {
+        const fullName =
+          `${formData.childName} ${formData.childSurname}`.trim();
+        const payload = {
+          full_name: fullName,
+          credits: credits,
+          age: formData.childAge ? parseInt(formData.childAge, 10) : null,
+        };
+
+        const response = await api.post("api/children/add/", payload);
+        console.log("Child added successfully:", response.data);
+      } else {
+        const selectedChild = children.find(
+          (c) => c.id.toString() === selectedChildId,
+        );
+
+        if (!selectedChild) return;
+
+        const newTotalCredits = selectedChild.credits + credits;
+
+        const response = await api.patch(
+          `api/child/${selectedChild.id}/update/`,
+          {
+            credits: newTotalCredits,
+          },
+        );
+        console.log("Credits updated successfully:", response.data);
+      }
+
+      navigate("/dashboard");
+    } catch (error: any) {
+      console.error(
+        "Failed to process request:",
+        error.response?.data || error.message,
+      );
+    }
+  }
+
+  if (loading) {
+    return <div className="loading-spinner">Încărcăm datele...</div>;
   }
 
   return (
@@ -27,22 +118,93 @@ export default function AddChildPage({ credits }: AddChildPageProps) {
       <Navbar role="parent" />
       <div className="main-content-subscriptions">
         <h1 className="main-title">
-          Înregistrează-ți copilul pentru a putea începe!
+          {isAddingNew
+            ? "Înregistrează-ți copilul pentru a putea începe!"
+            : "Alege copilul căruia dorești să îi atribui creditele:"}
         </h1>
-        <form method="post" className="addChildForm">
-          <label htmlFor="childName">Nume copil</label>
-          <input type="text" name="childName" id="childName" />
-          <label htmlFor="childSurname">Prenume copil</label>
-          <input type="text" name="childSurname" id="childSurname" />
-          <label htmlFor="childAge">Vârstă copil</label>
-          <input type="text" name="childAge" id="childAge" />
+
+        <form method="post" className="addChildForm" onSubmit={handleSubmit}>
+          {!isAddingNew && (
+            <>
+              <label htmlFor="childSelect">Alege un copil din listă:</label>
+              <div className="selections-container">
+                <select
+                  id="childSelect"
+                  value={selectedChildId}
+                  onChange={(e) => setSelectedChildId(e.target.value)}
+                  className="custom-select"
+                >
+                  {children.map((child) => (
+                    <option key={child.id} value={child.id}>
+                      {child.full_name} (Credite actuale: {child.credits})
+                    </option>
+                  ))}
+                </select>
+
+                <p>sau</p>
+
+                <button
+                  type="button"
+                  className="btn--users--outline"
+                  onClick={() => setIsAddingNew(true)}
+                >
+                  + Adaugă un copil nou
+                </button>
+              </div>
+            </>
+          )}
+
+          {isAddingNew && (
+            <>
+              <label htmlFor="childName">Nume copil</label>
+              <input
+                type="text"
+                name="childName"
+                id="childName"
+                value={formData.childName}
+                onChange={handleChange}
+                required={isAddingNew}
+              />
+
+              <label htmlFor="childSurname">Prenume copil</label>
+              <input
+                type="text"
+                name="childSurname"
+                id="childSurname"
+                value={formData.childSurname}
+                onChange={handleChange}
+                required={isAddingNew}
+              />
+
+              <label htmlFor="childAge">Vârstă copil</label>
+              <input
+                type="text"
+                name="childAge"
+                id="childAge"
+                value={formData.childAge}
+                maxLength={2}
+                onChange={(e) => {
+                  e.target.value = e.target.value.replace(/\D/g, "");
+                  handleChange(e);
+                }}
+              />
+
+              {children.length > 0 && (
+                <div className="back-button-container">
+                  <button
+                    type="button"
+                    className="btn--users--outline"
+                    onClick={() => setIsAddingNew(false)}
+                  >
+                    ← Înapoi la lista de copii
+                  </button>
+                </div>
+              )}
+            </>
+          )}
 
           <div className="buttons-section">
-            <button
-              type="button"
-              className="btn--dark"
-              onClick={(e) => cancel(e)}
-            >
+            <button type="button" className="btn--dark" onClick={cancel}>
               <svg
                 width="22"
                 height="22"
@@ -57,11 +219,8 @@ export default function AddChildPage({ credits }: AddChildPageProps) {
               </svg>
               Anulare
             </button>
-            <button
-              type="submit"
-              className="btn--primary"
-              onClick={handleSubmit}
-            >
+
+            <button type="submit" className="btn--primary">
               <svg
                 width="22"
                 height="22"
@@ -76,7 +235,7 @@ export default function AddChildPage({ credits }: AddChildPageProps) {
                   fill="white"
                 />
               </svg>
-              Salvează
+              {isAddingNew ? "Adaugă Copil" : "Atribuie Credite"}
             </button>
           </div>
         </form>

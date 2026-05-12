@@ -6,6 +6,7 @@ import "../styles/dashboard.scss";
 import type { Classroom, LessonWithClassroom } from "../Types";
 import ClassSession from "../components/ClassSession";
 import InfoCard from "../components/InfoCard";
+import AddChildPage from "./AddChildPage";
 
 export default function ParentDashboard() {
   const role = getUserRole()?.toLowerCase() as "parent";
@@ -91,7 +92,17 @@ export default function ParentDashboard() {
         <main className="main-content">
           <div className="left-side-container">
             <h2>Profesorul copilului:</h2>
-            <InfoCard data={activeChildTeacher} />
+            {!activeChildClassroom ? (
+              <div className="queue-container">
+                {activeChild.full_name} încă nu are atribuit un profesor.
+                Reveniți mai târziu!
+              </div>
+            ) : (
+              <InfoCard data={activeChildTeacher} />
+            )}
+            <div className="active-credits uninteractive-div">
+              Total Credite: {activeChild.credits}
+            </div>
           </div>
           <div className="right-side-container">
             <div className="title-container">
@@ -112,6 +123,12 @@ export default function ParentDashboard() {
                 ))}
               </div>
             </div>
+            {!activeChildClassroom && (
+              <div className="queue-container">
+                {activeChild.full_name} încă nu a fost atribuit într-o clasă.
+                Reveniți mai târziu!
+              </div>
+            )}
             {allLessons.map((lesson) => (
               <ClassSession key={lesson.id} role={role} lesson={lesson} />
             ))}

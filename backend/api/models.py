@@ -74,6 +74,7 @@ class ChildProfile(models.Model):
     )
     credits = models.PositiveIntegerField(default=0)
     full_name = models.CharField(max_length=50, null=True)
+    age = models.IntegerField(null=True, blank=True)
     class Meta:
         verbose_name = "Child"
         verbose_name_plural = "Children"
@@ -86,7 +87,7 @@ class ChildProfile(models.Model):
         
 
     def __str__(self):
-        return self.full_name or f"Child {self.id}"
+        return f"{self.full_name} - {self.age} ani" or f"Child {self.id}"
 
 
 DAYS_MAP = {
@@ -120,7 +121,7 @@ class Classroom(models.Model):
     
 
     def __str__(self):
-        return f"Classroom {self.id} - {self.teacher.user.username}"
+        return f"Classroom {self.id} - {self.titlu} - {self.schedule_day} - {self.schedule_time} - {self.teacher.user.username}"
 
 
 class Lesson(models.Model):

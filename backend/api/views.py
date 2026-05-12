@@ -46,6 +46,14 @@ class ChildProfileView(generics.RetrieveAPIView):
     queryset = ChildProfile.objects.all()
     lookup_field = "id"
 
+class ChildProfileCreateView(generics.CreateAPIView):
+    queryset = ChildProfile.objects.all()
+    serializer_class = ChildProfileSerializer
+    permission_classes = [IsParent] 
+
+    def perform_create(self, serializer):    
+        parent = self.request.user.parent_profile 
+        serializer.save(parent=parent)
 
 class CreateClassroomView(generics.CreateAPIView):
     serializer_class = ClassroomSerializer
@@ -54,6 +62,10 @@ class CreateClassroomView(generics.CreateAPIView):
     def perform_create(self, serializer):
         serializer.save()
 
+class ChildProfileUpdateView(generics.UpdateAPIView):
+    queryset = ChildProfile.objects.all()
+    serializer_class = ChildProfileSerializer
+    lookup_field = 'id'
 
 class LessonJoinView(RetrieveAPIView):
     queryset = Lesson.objects.all()
