@@ -1,6 +1,6 @@
 import time
 
-from pytz import timezone
+from django.utils import timezone
 
 from api.models import ChildProfile, Classroom, Lesson, User, TeacherProfile, ParentProfile
 from rest_framework import serializers
@@ -136,7 +136,12 @@ class LessonJoinSerializer(serializers.ModelSerializer):
         expiration_time = 3600
         current_timestamp = int(time.time())
         privilege_expired_ts = current_timestamp + expiration_time
+        channel_name = obj.channel_name
 
+        if not channel_name:
+            channel_name = f"lesson_{obj.id}"
+            obj.channel_name = channel_name
+            obj.save()
         token = RtcTokenBuilder.buildTokenWithUid(
             app_id, app_certificate, obj.channel_name, uid, role, privilege_expired_ts
         )
@@ -145,7 +150,7 @@ class LessonJoinSerializer(serializers.ModelSerializer):
             "token": token,
             "uid": uid,
             "appId": app_id,
-            "channel": obj.channel_name,
+            "channel": channel_name,
             "teacherUid": obj.classroom.teacher.user.id,
             
         }

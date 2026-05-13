@@ -41,24 +41,33 @@ export default function ParentDashboard() {
     if (!activeChild) return;
 
     async function getChildData() {
+      setActiveChildClassroom(null);
+      setActiveChildTeacher(null);
+      setAllLessons([]);
+
       try {
         const response = await api.get(`api/child/${activeChild.id}/`);
+
         if (response.status === 200) {
-          setActiveChildClassroom(response.data.classroom);
-          setActiveChildTeacher(response.data.classroom.teacher);
+          const classroom = response.data.classroom;
 
-          const lessons: LessonWithClassroom[] = response.data.classroom.lessons
-            .map((lesson: any) => ({
-              ...lesson,
-              classroom: response.data.classroom,
-            }))
-            .sort(
-              (a: any, b: any) =>
-                new Date(a.date_time).getTime() -
-                new Date(b.date_time).getTime(),
-            );
+          if (classroom) {
+            setActiveChildClassroom(classroom);
+            setActiveChildTeacher(classroom.teacher);
 
-          setAllLessons(lessons);
+            const lessons: LessonWithClassroom[] = classroom.lessons
+              .map((lesson: any) => ({
+                ...lesson,
+                classroom: classroom,
+              }))
+              .sort(
+                (a: any, b: any) =>
+                  new Date(a.date_time).getTime() -
+                  new Date(b.date_time).getTime(),
+              );
+
+            setAllLessons(lessons);
+          }
         }
       } catch (error) {
         console.error("Failed to fetch child data:", error);
