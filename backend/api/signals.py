@@ -35,19 +35,21 @@ def sync_lessons_for_classroom(classroom_instance):
         ).order_by("date_time").last()
 
         if last_lesson:
-            start_date = last_lesson.date_time
+            start_date = last_lesson.date_time + timedelta(weeks=1)
         else:
             target_weekday = DAYS_MAP[classroom_instance.schedule_day]
-            hour, minute = map(int, classroom_instance.schedule_time.split(":"))
             today = datetime.today()
             days_ahead = (target_weekday - today.weekday()) % 7 or 7
-            start_date = today + timedelta(days=days_ahead)
-            start_date = start_date.replace(hour=hour, minute=minute, second=0, microsecond=0)
+            t = classroom_instance.schedule_time
+            start_date = (today + timedelta(days=days_ahead)).replace(  # ← assign first, then replace
+            hour=t.hour, minute=t.minute, second=0, microsecond=0
+    )
+            
 
         new_lessons = [
             Lesson(
                 classroom=classroom_instance,
-                date_time=start_date + timedelta(weeks=i + 1),
+                date_time=start_date + timedelta(weeks=i),
                 is_canceled=False,
             )
             for i in range(lessons_to_create)

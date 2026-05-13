@@ -1,10 +1,15 @@
+import { useState } from "react";
 import "../styles/class_session.scss";
 import type { LessonWithClassroom } from "../Types";
 import { useNavigate } from "react-router-dom";
+import ConfirmModal from "./ConfirmModal";
+import api from "../api";
 
 interface Props {
   role: "teacher" | "parent";
   lesson: LessonWithClassroom;
+  childId?: number;
+  onSkip?: (lessonId: number) => void;
 }
 
 const CheckIcon = () => (
@@ -43,143 +48,174 @@ const BellIcon = () => (
   </svg>
 );
 
-export default function ClassSession({ role, lesson }: Props) {
+export default function ClassSession({ role, lesson, childId, onSkip }: Props) {
+  console.log(lesson);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [isSkipping, setIsSkipping] = useState(false);
+
+  const navigate = useNavigate();
+
   const date = new Date(lesson.date_time).toLocaleString("ro-RO", {
     weekday: "short",
     day: "numeric",
     month: "short",
     year: "numeric",
   });
-  const navigate = useNavigate();
+
   const handleJoin = () => {
-    console.log("here");
     navigate(`/classroom/${lesson.id}`);
   };
 
+  const handleSkipConfirmed = async () => {
+    setIsSkipping(true);
+    try {
+      await api.post(`/lessons/${lesson.id}/skip/`, { child_id: childId });
+      setShowConfirm(false);
+      onSkip?.(lesson.id);
+    } catch (err) {
+      console.error("Skip failed:", err);
+    } finally {
+      setIsSkipping(false);
+    }
+  };
+
   return (
-    <div className="session-container">
-      <div className="row-1">
-        <div className="col-1">
-          <p>{date}</p>
-          <div className="title-container">
-            <svg
-              width="14"
-              height="18"
-              viewBox="0 0 14 18"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M6.89517 0C10.7032 0 13.7903 1.54354 13.7903 3.44758C13.7903 5.35162 10.7032 6.89517 6.89517 6.89517C3.08707 6.89517 0 5.35162 0 3.44758C0 1.54354 3.08707 0 6.89517 0Z"
-                fill="black"
-              />
-              <path
-                d="M12.7987 7.48155C13.122 7.31988 13.4597 7.12487 13.7903 6.89526V8.73396C13.7903 10.638 10.7032 12.1815 6.89517 12.1815C3.08707 12.1815 0 10.638 0 8.73396V6.89526C0.330646 7.12487 0.668348 7.31988 0.991674 7.48155C2.62127 8.29634 4.71167 8.73396 6.89517 8.73396C9.07866 8.73396 11.169 8.29634 12.7987 7.48155Z"
-                fill="black"
-              />
-              <path
-                d="M0 12.1814V14.0201C0 15.9242 3.08707 17.4677 6.89517 17.4677C10.7032 17.4677 13.7903 15.9242 13.7903 14.0201V12.1814C13.4597 12.411 13.122 12.606 12.7987 12.7677C11.169 13.5825 9.07866 14.0201 6.89517 14.0201C4.71167 14.0201 2.62127 13.5825 0.991674 12.7677C0.668348 12.606 0.330646 12.411 0 12.1814Z"
-                fill="black"
-              />
-            </svg>
-            <h1 className="title-text">{lesson.classroom.titlu}</h1>
-          </div>
-          <p>
-            {lesson.classroom.schedule_day} | {lesson.classroom.schedule_time}
-          </p>
-        </div>
-        <div className="col-2">
-          {lesson.classroom.students.map((student) => (
-            <div className="student-container" key={student.id}>
-              <CheckIcon />
-              <p>{student.full_name}</p>
-              {role === "teacher" && <BellIcon />}
+    <>
+      {showConfirm && (
+        <ConfirmModal
+          message="Esti sigur ca vrei sa treci peste aceasta lectie?"
+          onConfirm={handleSkipConfirmed}
+          onCancel={() => setShowConfirm(false)}
+        />
+      )}
+
+      <div className="session-container">
+        <div className="row-1">
+          <div className="col-1">
+            <p>{date}</p>
+            <div className="title-container">
+              <svg
+                width="14"
+                height="18"
+                viewBox="0 0 14 18"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M6.89517 0C10.7032 0 13.7903 1.54354 13.7903 3.44758C13.7903 5.35162 10.7032 6.89517 6.89517 6.89517C3.08707 6.89517 0 5.35162 0 3.44758C0 1.54354 3.08707 0 6.89517 0Z"
+                  fill="black"
+                />
+                <path
+                  d="M12.7987 7.48155C13.122 7.31988 13.4597 7.12487 13.7903 6.89526V8.73396C13.7903 10.638 10.7032 12.1815 6.89517 12.1815C3.08707 12.1815 0 10.638 0 8.73396V6.89526C0.330646 7.12487 0.668348 7.31988 0.991674 7.48155C2.62127 8.29634 4.71167 8.73396 6.89517 8.73396C9.07866 8.73396 11.169 8.29634 12.7987 7.48155Z"
+                  fill="black"
+                />
+                <path
+                  d="M0 12.1814V14.0201C0 15.9242 3.08707 17.4677 6.89517 17.4677C10.7032 17.4677 13.7903 15.9242 13.7903 14.0201V12.1814C13.4597 12.411 13.122 12.606 12.7987 12.7677C11.169 13.5825 9.07866 14.0201 6.89517 14.0201C4.71167 14.0201 2.62127 13.5825 0.991674 12.7677C0.668348 12.606 0.330646 12.411 0 12.1814Z"
+                  fill="black"
+                />
+              </svg>
+              <h1 className="title-text">{lesson.classroom.titlu}</h1>
             </div>
-          ))}
+            <p>{lesson.classroom.classroom_type}</p>
+          </div>
+          <div className="col-2">
+            {lesson.classroom.students.map((student) => (
+              <div className="student-container" key={student.id}>
+                <CheckIcon />
+                <p>{student.full_name}</p>
+                {role === "teacher" && <BellIcon />}
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="row-2">
+          <div className="buttons-section">
+            {role === "teacher" && (
+              <button className="btn--outline--red">
+                <svg
+                  width="13"
+                  height="13"
+                  viewBox="0 0 13 13"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M4.2341 3.2578C3.73837 3.35097 3.00777 4.19857 3.33017 4.52097L5.3118 6.50173L3.33017 8.4825C2.93367 8.879 4.12273 10.0668 4.51923 9.6707L6.50087 7.68993L8.4825 9.6707C8.879 10.0672 10.0676 8.87813 9.67157 8.4825L7.68993 6.50173L9.67157 4.52097C10.0681 4.12447 8.879 2.9367 8.4825 3.33277L6.50087 5.31353L4.51923 3.33277C4.44427 3.25867 4.34807 3.23613 4.2341 3.2578ZM6.5 0C2.90983 0 0 2.91027 0 6.5C0 10.0897 2.90983 13 6.5 13C10.0902 13 13 10.0897 13 6.5C13 2.91027 10.0902 0 6.5 0ZM6.5 1.625C9.1923 1.625 11.375 3.8077 11.375 6.5C11.375 9.1923 9.1923 11.375 6.5 11.375C3.8077 11.375 1.625 9.1923 1.625 6.5C1.62543 3.8077 3.8077 1.625 6.5 1.625Z"
+                    fill="#FF0000"
+                  />
+                </svg>
+                Anulare Lecție
+              </button>
+            )}
+
+            {role === "parent" && (
+              <button
+                className="btn--outline"
+                onClick={() => setShowConfirm(true)}
+                disabled={isSkipping}
+              >
+                <svg
+                  width="8"
+                  height="12"
+                  viewBox="0 0 8 12"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M7.96875 5.625L2.8125 11.25V9.85828L6.69703 5.625L2.8125 1.38422V0L7.96875 5.625ZM5.15625 5.625L0 11.25V0L5.15625 5.625ZM0.9375 8.83969L3.88453 5.625L0.9375 2.41031V8.83969Z"
+                    fill="#FF6116"
+                  />
+                </svg>
+                Skip
+              </button>
+            )}
+
+            {role === "teacher" && (
+              <button className="btn--outline">
+                <svg
+                  width="13"
+                  height="13"
+                  viewBox="0 0 13 13"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M12.8758 0.124178C12.7871 0.0354625 12.6638 -0.00937748 12.5386 0.00164208C12.4518 0.00931007 10.3953 0.205936 8.97791 1.62337C8.78321 1.81812 0.321662 10.2797 0.124199 10.4772C-0.0413995 10.6427 -0.0413995 10.9112 0.124199 11.0768L1.92321 12.8758C2.006 12.9586 2.11452 13 2.22304 13C2.33156 13 2.44008 12.9586 2.52286 12.8758L11.3766 4.02206C12.7941 2.60459 12.9907 0.548177 12.9983 0.461341C13.0094 0.336368 12.9645 0.212918 12.8758 0.124178ZM2.22307 11.9763L1.02371 10.777L1.62342 10.1773L2.82277 11.3766L2.22307 11.9763ZM9.87747 4.32189L8.67812 3.12254L9.2778 2.52286L10.4772 3.72222L9.87747 4.32189Z"
+                    fill="#FF6116"
+                  />
+                </svg>
+                Creare Test
+              </button>
+            )}
+
+            <button className="btn--primary" onClick={handleJoin}>
+              <svg
+                width="10"
+                height="11"
+                viewBox="0 0 10 11"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M2.86621 0.573059H8.59707V8.59623C8.59707 9.22926 8.08393 9.74241 7.4509 9.74241H2.86621"
+                  stroke="white"
+                  strokeWidth="1.14617"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M4.58484 6.87721L6.3041 5.15795M6.3041 5.15795L4.58484 3.43872M6.3041 5.15795H0.573242"
+                  stroke="white"
+                  strokeWidth="1.14617"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              Intră
+            </button>
+          </div>
         </div>
       </div>
-      <div className="row-2">
-        <div className="buttons-section">
-          {role === "teacher" && (
-            <button className="btn--outline--red">
-              <svg
-                width="13"
-                height="13"
-                viewBox="0 0 13 13"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M4.2341 3.2578C3.73837 3.35097 3.00777 4.19857 3.33017 4.52097L5.3118 6.50173L3.33017 8.4825C2.93367 8.879 4.12273 10.0668 4.51923 9.6707L6.50087 7.68993L8.4825 9.6707C8.879 10.0672 10.0676 8.87813 9.67157 8.4825L7.68993 6.50173L9.67157 4.52097C10.0681 4.12447 8.879 2.9367 8.4825 3.33277L6.50087 5.31353L4.51923 3.33277C4.44427 3.25867 4.34807 3.23613 4.2341 3.2578ZM6.5 0C2.90983 0 0 2.91027 0 6.5C0 10.0897 2.90983 13 6.5 13C10.0902 13 13 10.0897 13 6.5C13 2.91027 10.0902 0 6.5 0ZM6.5 1.625C9.1923 1.625 11.375 3.8077 11.375 6.5C11.375 9.1923 9.1923 11.375 6.5 11.375C3.8077 11.375 1.625 9.1923 1.625 6.5C1.62543 3.8077 3.8077 1.625 6.5 1.625Z"
-                  fill="#FF0000"
-                />
-              </svg>
-              Anulare Lecție
-            </button>
-          )}
-          {role === "parent" && (
-            <button className="btn--outline">
-              <svg
-                width="8"
-                height="12"
-                viewBox="0 0 8 12"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M7.96875 5.625L2.8125 11.25V9.85828L6.69703 5.625L2.8125 1.38422V0L7.96875 5.625ZM5.15625 5.625L0 11.25V0L5.15625 5.625ZM0.9375 8.83969L3.88453 5.625L0.9375 2.41031V8.83969Z"
-                  fill="#FF6116"
-                />
-              </svg>
-              Skip
-            </button>
-          )}
-
-          {role === "teacher" && (
-            <button className="btn--outline">
-              <svg
-                width="13"
-                height="13"
-                viewBox="0 0 13 13"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M12.8758 0.124178C12.7871 0.0354625 12.6638 -0.00937748 12.5386 0.00164208C12.4518 0.00931007 10.3953 0.205936 8.97791 1.62337C8.78321 1.81812 0.321662 10.2797 0.124199 10.4772C-0.0413995 10.6427 -0.0413995 10.9112 0.124199 11.0768L1.92321 12.8758C2.006 12.9586 2.11452 13 2.22304 13C2.33156 13 2.44008 12.9586 2.52286 12.8758L11.3766 4.02206C12.7941 2.60459 12.9907 0.548177 12.9983 0.461341C13.0094 0.336368 12.9645 0.212918 12.8758 0.124178ZM2.22307 11.9763L1.02371 10.777L1.62342 10.1773L2.82277 11.3766L2.22307 11.9763ZM9.87747 4.32189L8.67812 3.12254L9.2778 2.52286L10.4772 3.72222L9.87747 4.32189Z"
-                  fill="#FF6116"
-                />
-              </svg>
-              Creare Test
-            </button>
-          )}
-
-          <button className="btn--primary" onClick={() => handleJoin()}>
-            <svg
-              width="10"
-              height="11"
-              viewBox="0 0 10 11"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M2.86621 0.573059H8.59707V8.59623C8.59707 9.22926 8.08393 9.74241 7.4509 9.74241H2.86621"
-                stroke="white"
-                strokeWidth="1.14617"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M4.58484 6.87721L6.3041 5.15795M6.3041 5.15795L4.58484 3.43872M6.3041 5.15795H0.573242"
-                stroke="white"
-                strokeWidth="1.14617"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            Intră
-          </button>
-        </div>
-      </div>
-    </div>
+    </>
   );
 }

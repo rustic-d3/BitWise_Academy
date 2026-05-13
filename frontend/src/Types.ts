@@ -9,6 +9,7 @@ export interface Lesson {
   id: number;
   date_time: string;
   is_canceled: boolean;
+  skipped_by: number[];
 }
 
 export interface Classroom {
@@ -18,6 +19,7 @@ export interface Classroom {
   lessons: Lesson[];
   schedule_day: string;
   schedule_time: string;
+  classroom_type: string;
   is_canceled: boolean;
 }
 

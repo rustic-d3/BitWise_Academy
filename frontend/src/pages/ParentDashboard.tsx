@@ -3,20 +3,19 @@ import Navbar from "../components/Navbar";
 import { getUserRole } from "../helper-functions/DecodedToken";
 import api from "../api";
 import "../styles/dashboard.scss";
-import type { Classroom, LessonWithClassroom } from "../Types";
+import type { LessonWithClassroom } from "../Types";
 import ClassSession from "../components/ClassSession";
 import InfoCard from "../components/InfoCard";
-import AddChildPage from "./AddChildPage";
 
 export default function ParentDashboard() {
   const role = getUserRole()?.toLowerCase() as "parent";
   const [loading, setLoading] = useState(true);
-
   const [parentData, setParentData] = useState(null);
   const [children, setChildren] = useState<any[]>([]);
   const [activeChild, setActiveChild] = useState<any>(null);
   const [activeChildClassroom, setActiveChildClassroom] = useState<any>(null);
   const [activeChildTeacher, setActiveChildTeacher] = useState<any>(null);
+  const [allLessons, setAllLessons] = useState<LessonWithClassroom[]>([]);
 
   useEffect(() => {
     async function getParentData() {
@@ -47,6 +46,19 @@ export default function ParentDashboard() {
         if (response.status === 200) {
           setActiveChildClassroom(response.data.classroom);
           setActiveChildTeacher(response.data.classroom.teacher);
+
+          const lessons: LessonWithClassroom[] = response.data.classroom.lessons
+            .map((lesson: any) => ({
+              ...lesson,
+              classroom: response.data.classroom,
+            }))
+            .sort(
+              (a: any, b: any) =>
+                new Date(a.date_time).getTime() -
+                new Date(b.date_time).getTime(),
+            );
+
+          setAllLessons(lessons);
         }
       } catch (error) {
         console.error("Failed to fetch child data:", error);
@@ -56,21 +68,14 @@ export default function ParentDashboard() {
     getChildData();
   }, [activeChild]);
 
-  const allLessons: LessonWithClassroom[] = activeChildClassroom
-    ? activeChildClassroom.lessons
-        .map((lesson: any) => ({
-          ...lesson,
-          classroom: activeChildClassroom,
-        }))
-        .sort(
-          (a: any, b: any) =>
-            new Date(a.date_time).getTime() - new Date(b.date_time).getTime(),
-        )
-    : [];
+  const handleSkip = (lessonId: number) => {
+    setAllLessons((prev) => prev.filter((l) => l.id !== lessonId));
+  };
 
   if (loading) {
     return <div className="loading-spinner">Încărcăm datele...</div>;
   }
+
   return (
     <div className="page-wrapper">
       <Navbar role="parent" />
@@ -101,7 +106,7 @@ export default function ParentDashboard() {
               <InfoCard data={activeChildTeacher} />
             )}
             <div className="active-credits uninteractive-div">
-              Total Credite: {activeChild.credits}
+              Total Lecții: {activeChild.credits}
             </div>
           </div>
           <div className="right-side-container">
@@ -129,9 +134,17 @@ export default function ParentDashboard() {
                 Reveniți mai târziu!
               </div>
             )}
-            {allLessons.map((lesson) => (
-              <ClassSession key={lesson.id} role={role} lesson={lesson} />
-            ))}
+            {allLessons
+              .filter((lesson) => !lesson.skipped_by.includes(activeChild.id))
+              .map((lesson) => (
+                <ClassSession
+                  key={lesson.id}
+                  role={role}
+                  lesson={lesson}
+                  childId={activeChild.id}
+                  onSkip={handleSkip}
+                />
+              ))}
           </div>
         </main>
       )}

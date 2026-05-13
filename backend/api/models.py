@@ -95,7 +95,21 @@ DAYS_MAP = {
     "Thu": 3, "Fri": 4, "Sat": 5, "Sun": 6,
 }
 
+class ScheduleDay(models.TextChoices):
+    MON = "Mon", "Monday"
+    TUE = "Tue", "Tuesday"
+    WED = "Wed", "Wednesday"
+    THU = "Thu", "Thursday"
+    FRI = "Fri", "Friday"
+    SAT = "Sat", "Saturday"
+    SUN = "Sun", "Sunday"
 
+class ClassroomType(models.TextChoices):
+    RO = "RO", "Română"
+    ENG = "ENG", "Engleză"
+    RO_EN = "RO/EN", "Română/Engleză"
+    
+    
 class Classroom(models.Model):
     
     titlu = models.CharField(
@@ -109,8 +123,13 @@ class Classroom(models.Model):
         related_name="classrooms",
         blank=True
     )
-    schedule_day = models.CharField(max_length=3)
-    schedule_time = models.CharField(max_length=5)
+    schedule_day = models.CharField(
+        max_length=3,
+        choices=ScheduleDay.choices,  
+        default=ScheduleDay.MON,
+    )
+    classroom_type = models.CharField(choices= ClassroomType, default=ClassroomType.RO)
+    schedule_time = models.TimeField()
     whiteboard_files = models.JSONField(default=list, blank=True)
     is_canceled = models.BooleanField(default=False)
 
@@ -134,6 +153,11 @@ class Lesson(models.Model):
     is_canceled = models.BooleanField(default=False)
     
     channel_name = models.CharField(max_length=255, unique=True, blank=True, null=True )
+    skipped_by = models.ManyToManyField(          # ← new
+        "ChildProfile",
+        related_name="skipped_lessons",
+        blank=True,
+    )
 
     class Meta:
         verbose_name = "Lesson"

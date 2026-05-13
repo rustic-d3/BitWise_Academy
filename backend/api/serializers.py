@@ -1,5 +1,7 @@
 import time
 
+from pytz import timezone
+
 from api.models import ChildProfile, Classroom, Lesson, User, TeacherProfile, ParentProfile
 from rest_framework import serializers
 from django.core.validators import RegexValidator
@@ -168,10 +170,19 @@ class ClassroomBasicSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Classroom
-        fields = ["id", "titlu","teacher" , "students", "schedule_day", "schedule_time", "is_canceled", "lessons"]
+        fields = ["id", "titlu","teacher" , "students", "schedule_day", "schedule_time", "is_canceled", "lessons", "classroom_type"]
+
+
 
 class ChildProfileSerializer(serializers.ModelSerializer):
     classroom = ClassroomBasicSerializer(read_only=True)
+    def get_classroom(self, obj):
+        if not obj.classroom:
+            return None
+        return ClassroomSerializer(
+            obj.classroom,
+            context=self.context  # ← forward context so child_id reaches get_lessons
+        ).data
 
     class Meta:
         model = ChildProfile
@@ -180,16 +191,24 @@ class ChildProfileSerializer(serializers.ModelSerializer):
 
 
 class ClassroomSerializer(serializers.ModelSerializer):
-    lessons = LessonSerializer(many=True, read_only=True)
+    lessons = serializers.SerializerMethodField()
     students = ChildProfileBasicSerializer(many=True, read_only=True)
 
     def get_lessons(self, obj):
-        lessons = obj.lessons.filter(is_canceled=False).order_by("date_time")
+        child_id = self.context.get("child_id")
+        lessons = obj.lessons.filter(
+            is_canceled=False,
+            date_time__gte=timezone.now()
+        ).order_by("date_time")
+
+        if child_id:
+            lessons = lessons.exclude(skipped_by__id=child_id)  # ← filter skipped
+
         return LessonSerializer(lessons, many=True).data
 
     class Meta:
         model = Classroom
-        fields = ["id", "titlu", "students", "schedule_day", "schedule_time", "is_canceled", "lessons"]
+        fields = ["id", "titlu", "students", "schedule_day", "schedule_time", "is_canceled", "lessons", "classroom_type"]
 
 
 class TeacherProfileSerializer(serializers.ModelSerializer):

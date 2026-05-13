@@ -54,7 +54,7 @@ class ParentProfileAdmin(admin.ModelAdmin):
 
 @admin.register(ChildProfile)
 class ChildProfileAdmin(admin.ModelAdmin):
-    pass
+    readonly_fields = ["credits"]
 
 
 @admin.register(Lesson)
