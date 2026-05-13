@@ -10,6 +10,7 @@ interface Props {
   lesson: LessonWithClassroom;
   childId?: number;
   onSkip?: (lessonId: number) => void;
+  onDelete?: (id: number) => void;
 }
 
 const CheckIcon = () => (
@@ -48,8 +49,13 @@ const BellIcon = () => (
   </svg>
 );
 
-export default function ClassSession({ role, lesson, childId, onSkip }: Props) {
-  console.log(lesson);
+export default function ClassSession({
+  role,
+  lesson,
+  childId,
+  onSkip,
+  onDelete,
+}: Props) {
   const [showConfirm, setShowConfirm] = useState(false);
   const [isSkipping, setIsSkipping] = useState(false);
 
@@ -61,6 +67,22 @@ export default function ClassSession({ role, lesson, childId, onSkip }: Props) {
     month: "short",
     year: "numeric",
   });
+  async function cancelLesson(lessonId: number) {
+    try {
+      const response = await api.delete(
+        `api/lessons/${lessonId}/cancel-lesson`,
+      );
+      if (response.status === 200 || response.status === 204) {
+        if (onDelete) {
+          onDelete(lesson.id);
+        }
+
+        console.log("Lesson canceled successfully!");
+      }
+    } catch (error: any) {
+      console.log(error);
+    }
+  }
 
   const handleJoin = () => {
     navigate(`/classroom/${lesson.id}`);
@@ -131,7 +153,10 @@ export default function ClassSession({ role, lesson, childId, onSkip }: Props) {
         <div className="row-2">
           <div className="buttons-section">
             {role === "teacher" && (
-              <button className="btn--outline--red">
+              <button
+                className="btn--outline--red"
+                onClick={() => cancelLesson(lesson.id)}
+              >
                 <svg
                   width="13"
                   height="13"

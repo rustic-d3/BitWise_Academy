@@ -20,7 +20,6 @@ export default function TeacherDashboard() {
         if (response.status === 200) {
           setTeacherData(response.data);
           setClassrooms(response.data.classrooms);
-          console.log(response.data);
         }
       } catch (error) {
         console.error("Failed to fetch teacher data:", error);
@@ -29,6 +28,16 @@ export default function TeacherDashboard() {
 
     getTeacherData();
   }, []);
+
+  const handleDeleteLesson = (lessonId: number) => {
+    console.log("Lectie stearsa!");
+    setClassrooms((prevClassrooms) =>
+      prevClassrooms.map((classroom) => ({
+        ...classroom,
+        lessons: classroom.lessons.filter((lesson) => lesson.id !== lessonId),
+      })),
+    );
+  };
 
   const allLessons: LessonWithClassroom[] = classrooms
     .flatMap((classroom) =>
@@ -52,7 +61,12 @@ export default function TeacherDashboard() {
         <div className="right-side-container">
           <h2>Următoarele Sesiuni:</h2>
           {allLessons.map((lesson) => (
-            <ClassSession key={lesson.id} role={role} lesson={lesson} />
+            <ClassSession
+              key={lesson.id}
+              role={role}
+              lesson={lesson}
+              onDelete={handleDeleteLesson}
+            />
           ))}
         </div>
       </main>

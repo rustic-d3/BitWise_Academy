@@ -153,6 +153,7 @@ class Lesson(models.Model):
     is_canceled = models.BooleanField(default=False)
     
     channel_name = models.CharField(max_length=255, unique=True, blank=True, null=True )
+    whiteboard_uuid = models.CharField(max_length=255,unique=True, blank=True, null=True)
     skipped_by = models.ManyToManyField(          # ← new
         "ChildProfile",
         related_name="skipped_lessons",

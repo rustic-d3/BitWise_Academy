@@ -3,7 +3,7 @@ import "../styles/_navbar.scss";
 import handleLogout from "../helper-functions/Logout";
 
 interface RoleProps {
-  role: "teacher" | "parent";
+  role: string;
 }
 
 export default function Navbar({ role }: RoleProps) {

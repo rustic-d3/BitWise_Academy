@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404
 from .permissions import IsAdmin, IsParent, IsTeacher
 from .models import ChildProfile, Lesson, User
 from rest_framework import generics
-from rest_framework.generics import GenericAPIView, RetrieveAPIView
+from rest_framework.generics import DestroyAPIView, GenericAPIView, RetrieveAPIView
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -13,6 +13,7 @@ from .serializers import (
     ChildProfileSerializer,
     ClassroomSerializer,
     LessonJoinSerializer,
+    LessonSerializer,
     ParentProfileSerializer,
     TeacherProfileSerializer,
     UserSerializer,
@@ -83,6 +84,11 @@ class LessonJoinView(RetrieveAPIView):
     queryset = Lesson.objects.all()
     serializer_class = LessonJoinSerializer
     permission_classes = [IsAuthenticated]
+    lookup_field = "id"
+
+class LessonDeleteView(DestroyAPIView):
+    queryset = Lesson.objects.all()
+    serializer_class = LessonSerializer
     lookup_field = "id"
     
 class LessonSkipView(GenericAPIView):

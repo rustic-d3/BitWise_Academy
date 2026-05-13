@@ -1,7 +1,7 @@
 import time
 
 from django.utils import timezone
-
+import requests
 from api.models import ChildProfile, Classroom, Lesson, User, TeacherProfile, ParentProfile
 from rest_framework import serializers
 from django.core.validators import RegexValidator
@@ -130,6 +130,9 @@ class LessonJoinSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         uid = user.id 
         
+        if not app_id or not app_certificate:
+            raise ValueError("AGORA_APP_ID sau CERTIFICATE lipsesc! Verifică fișierul .env și setările Docker.")
+        
 
         role = 1 if str(user.role).lower() == "teacher" else 2
 
@@ -142,18 +145,53 @@ class LessonJoinSerializer(serializers.ModelSerializer):
             channel_name = f"lesson_{obj.id}"
             obj.channel_name = channel_name
             obj.save()
-        token = RtcTokenBuilder.buildTokenWithUid(
-            app_id, app_certificate, obj.channel_name, uid, role, privilege_expired_ts
+        video_token = RtcTokenBuilder.buildTokenWithUid(
+            app_id, app_certificate, channel_name, uid, role, privilege_expired_ts
         )
+        whiteboard_sdk_token = os.getenv("AGORA_WHITEBOARD_SDK_TOKEN") 
+        whiteboard_region = "eu" 
+
+        headers = {
+            "token": whiteboard_sdk_token,
+            "Content-Type": "application/json",
+            "region": whiteboard_region
+        }
+        
+        room_uuid = getattr(obj, 'whiteboard_uuid', None)
+        
+        if not room_uuid:
+            room_response = requests.post(
+                "https://api.netless.link/v5/rooms", 
+                headers=headers,
+                json={"isRecord": False}
+            )
+            if room_response.status_code == 201:
+                room_uuid = room_response.json().get('uuid')
+                obj.whiteboard_uuid = room_uuid 
+                obj.save()
+                
+        board_token = None
+        if room_uuid:
+            token_response = requests.post(
+                f"https://api.netless.link/v5/tokens/rooms/{room_uuid}",
+                headers=headers,
+                json={"lifespan": 0, "role": "admin" if role == 1 else "writer"}
+            )
+            if token_response.status_code == 201:
+                board_token = token_response.json()
 
         return {
-            "token": token,
+            "token": video_token,
             "uid": uid,
             "appId": app_id,
             "channel": channel_name,
             "teacherUid": obj.classroom.teacher.user.id,
-            
-        }
+            "whiteboard": {
+                "uuid": room_uuid,
+                "token": board_token,
+                "appIdentifier": os.getenv("AGORA_WHITEBOARD_APP_IDENTIFIER"),
+                "region": whiteboard_region
+            }}
 
 class ChildProfileBasicSerializer(serializers.ModelSerializer):
     class Meta:
@@ -186,7 +224,7 @@ class ChildProfileSerializer(serializers.ModelSerializer):
             return None
         return ClassroomSerializer(
             obj.classroom,
-            context=self.context  # ← forward context so child_id reaches get_lessons
+            context=self.context  
         ).data
 
     class Meta:
