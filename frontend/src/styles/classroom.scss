@@ -77,7 +77,7 @@
 .row {
   &--1 {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
   }
   &--2 {
     flex: 1;

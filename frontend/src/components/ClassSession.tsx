@@ -3,6 +3,7 @@ import "../styles/class_session.scss";
 import type { LessonWithClassroom } from "../Types";
 import { useNavigate } from "react-router-dom";
 import ConfirmModal from "./ConfirmModal";
+import UploadTestModal from "./UploadTestModal";
 import api from "../api";
 
 interface Props {
@@ -56,7 +57,8 @@ export default function ClassSession({
   onSkip,
   onDelete,
 }: Props) {
-  const [showConfirm, setShowConfirm] = useState(false);
+  const [showSkipConfirm, setShowSkipConfirm] = useState(false);
+  const [showUploadTest, setShowUploadTest] = useState(false);
   const [isSkipping, setIsSkipping] = useState(false);
 
   const navigate = useNavigate();
@@ -67,32 +69,27 @@ export default function ClassSession({
     month: "short",
     year: "numeric",
   });
+
   async function cancelLesson(lessonId: number) {
     try {
       const response = await api.delete(
         `api/lessons/${lessonId}/cancel-lesson`,
       );
       if (response.status === 200 || response.status === 204) {
-        if (onDelete) {
-          onDelete(lesson.id);
-        }
-
-        console.log("Lesson canceled successfully!");
+        if (onDelete) onDelete(lesson.id);
       }
     } catch (error: any) {
       console.log(error);
     }
   }
 
-  const handleJoin = () => {
-    navigate(`/classroom/${lesson.id}`);
-  };
+  const handleJoin = () => navigate(`/classroom/${lesson.id}`);
 
   const handleSkipConfirmed = async () => {
     setIsSkipping(true);
     try {
-      await api.post(`/lessons/${lesson.id}/skip/`, { child_id: childId });
-      setShowConfirm(false);
+      await api.post(`api/lessons/${lesson.id}/skip/`, { child_id: childId });
+      setShowSkipConfirm(false);
       onSkip?.(lesson.id);
     } catch (err) {
       console.error("Skip failed:", err);
@@ -103,11 +100,19 @@ export default function ClassSession({
 
   return (
     <>
-      {showConfirm && (
+      {showSkipConfirm && (
         <ConfirmModal
           message="Esti sigur ca vrei sa treci peste aceasta lectie?"
           onConfirm={handleSkipConfirmed}
-          onCancel={() => setShowConfirm(false)}
+          onCancel={() => setShowSkipConfirm(false)}
+        />
+      )}
+
+      {showUploadTest && (
+        <UploadTestModal
+          lessonId={lesson.id}
+          onClose={() => setShowUploadTest(false)}
+          onSuccess={() => console.log("Test uploaded!")}
         />
       )}
 
@@ -176,7 +181,7 @@ export default function ClassSession({
             {role === "parent" && (
               <button
                 className="btn--outline"
-                onClick={() => setShowConfirm(true)}
+                onClick={() => setShowSkipConfirm(true)}
                 disabled={isSkipping}
               >
                 <svg
@@ -196,7 +201,10 @@ export default function ClassSession({
             )}
 
             {role === "teacher" && (
-              <button className="btn--outline">
+              <button
+                className="btn--outline"
+                onClick={() => setShowUploadTest(true)}
+              >
                 <svg
                   width="13"
                   height="13"

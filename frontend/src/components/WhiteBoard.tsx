@@ -16,8 +16,6 @@ export default function WhiteBoard({
   region,
   uid,
 }: BoardProps) {
-  // Hardcodat pentru moment, pentru UI-ul tău
-  const isPdf = true;
 
   // Configurăm și ne conectăm la tablă
   const app = useFastboard(() => ({
@@ -32,7 +30,7 @@ export default function WhiteBoard({
     },
   }));
 
-  // Cât timp se conectează la serverele Agora, afișăm un loading
+  // Cât timp se conectează la serverele Agora, afișez un loading
   if (!app) {
     return <div className="loading-board">Se încarcă tabla...</div>;
   }
@@ -40,15 +38,6 @@ export default function WhiteBoard({
 
   return (
     <div className="whiteboard-container">
-      {isPdf && (
-        <div className="pdf-pagination">
-          <div className="btn--outline--black">1</div>
-          <div className="btn--outline--black">2</div>
-          <div className="btn--outline--black">3</div>
-          <div className="btn--outline--black">4</div>
-        </div>
-      )}
-
       <div
         className="content-container"
         style={{

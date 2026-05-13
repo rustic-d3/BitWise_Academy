@@ -146,3 +146,58 @@
   gap: 1rem;
   justify-content: center;
 }
+
+.modal-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.upload-area {
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  padding: 2rem 1rem;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.2s;
+
+  &:hover {
+    border-color: g.$primary-orange;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #444;
+  }
+}
+
+.file-name {
+  font-weight: 500;
+  color: g.$primary-orange;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1em;
+}
+
+.file-content {
+  display: flex;
+  gap: 2em;
+  width: 100%;
+  justify-content: center;
+}
+
+.upload-hint {
+  display: block;
+  margin-top: 0.4rem;
+  font-size: 0.75rem;
+  color: #999;
+}
+
+.upload-error {
+  color: red;
+  font-size: 0.85rem;
+  text-align: center;
+  margin: 0;
+}

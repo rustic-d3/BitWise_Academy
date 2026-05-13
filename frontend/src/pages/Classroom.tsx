@@ -106,45 +106,6 @@ export default function Classroom() {
         <div className="right-side-container--classroom">
           <div className="row--1">
             <div className="buttons-section">
-              <button className="btn--users--outline">Tab1</button>
-              <button className="btn--users--outline">Tab2</button>
-              <button className="btn--users--active">Tab3</button>
-              <button className="btn--rounded">
-                <svg
-                  width="12"
-                  height="11"
-                  viewBox="0 0 12 11"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M0.75 5.25H10.8929H0.75ZM5.82143 0.75V9.75V0.75Z"
-                    fill="url(#paint0_linear_1_2820)"
-                  />
-                  <path
-                    d="M0.75 5.25H10.8929M5.82143 0.75V9.75"
-                    stroke="white"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <defs>
-                    <linearGradient
-                      id="paint0_linear_1_2820"
-                      x1="5.82143"
-                      y1="0.75"
-                      x2="5.82143"
-                      y2="9.75"
-                      gradientUnits="userSpaceOnUse"
-                    >
-                      <stop stopColor="#FF6116" />
-                      <stop offset="1" stopColor="#FF388C" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-              </button>
-            </div>
-            <div className="buttons-section">
               <button
                 className="btn--primary"
                 onClick={() => navigate("/dashboard")}
