@@ -83,7 +83,15 @@ export default function ClassSession({
     }
   }
 
-  const handleJoin = () => navigate(`/classroom/${lesson.id}`);
+  const handleJoin = () => {
+    const childName = lesson.classroom.students.find(
+      (s) => s.id === childId,
+    )?.full_name;
+
+    navigate(`/classroom/${lesson.id}`, {
+      state: { childName }, 
+    });
+  };
 
   const handleSkipConfirmed = async () => {
     setIsSkipping(true);

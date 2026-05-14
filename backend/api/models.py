@@ -159,6 +159,7 @@ class Lesson(models.Model):
         related_name="skipped_lessons",
         blank=True,
     )
+    generated_test = models.JSONField(null=True, blank=True)
 
     class Meta:
         verbose_name = "Lesson"
@@ -178,9 +179,17 @@ class Lesson(models.Model):
             date_time=new_datetime,
             is_canceled=False,
         )
+    
 
     def __str__(self):
         return f"Lesson {self.id} - {self.date_time}"
+
+class TestAttempt(models.Model):
+    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE)
+    student = models.ForeignKey(User, on_delete=models.CASCADE)
+    answers_summary = models.JSONField() 
+    score = models.FloatField()
+    completed_at = models.DateTimeField(auto_now_add=True)
 
 
 class LessonAttendance(models.Model):

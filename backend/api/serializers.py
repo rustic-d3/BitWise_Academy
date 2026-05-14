@@ -179,13 +179,19 @@ class LessonJoinSerializer(serializers.ModelSerializer):
             )
             if token_response.status_code == 201:
                 board_token = token_response.json()
-
+                
+            participants = {}
+            for student in obj.classroom.students.all():
+                participants[str(student.parent.user.id)] = student.full_name
+                
         return {
             "token": video_token,
             "uid": uid,
             "appId": app_id,
             "channel": channel_name,
             "teacherUid": obj.classroom.teacher.user.id,
+            "teacherName": f"{obj.classroom.teacher.user.first_name} {obj.classroom.teacher.user.last_name}",
+            "participants": participants,
             "whiteboard": {
                 "uuid": room_uuid,
                 "token": board_token,

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import "../styles/classroom.scss";
 import VideoComponent from "../components/VideoComponent";
@@ -6,19 +6,27 @@ import { useNavigate, useParams } from "react-router-dom";
 import WhiteBoard from "../components/WhiteBoard";
 import api from "../api";
 import { getUserRole } from "../helper-functions/DecodedToken";
+import TestComponent from "../components/TestComponent";
+import { useLocation } from "react-router-dom";
 
 export default function Classroom() {
   const { lessonId } = useParams<{ lessonId: string }>();
   const [agoraConfig, setAgoraConfig] = React.useState<any>(null);
   const navigate = useNavigate();
   const user_role = getUserRole() || "";
+  const [testOn, setTestOn] = useState(false);
+  const location = useLocation();
+  const childName = location.state?.childName ?? null;
+  const [participants, setParticipants] = useState<Record<string, string>>({});
+
+  function startTest() {}
 
   useEffect(() => {
     const fetchSessionPass = async () => {
       try {
         const response = await api.get(`/api/lessons/${lessonId}/join/`);
         setAgoraConfig(response.data.agora_data);
-        console.log("Agora Data:", response.data.agora_data);
+        setParticipants(response.data.agora_data.participants);
       } catch (err) {
         console.error("Could not join session", err);
       }
@@ -83,7 +91,13 @@ export default function Classroom() {
               </button>
             </div>
             <div className="buttons-container-right">
-              <button className="btn--outline">
+              <button
+                className="btn--outline"
+                onClick={() => {
+                  startTest();
+                  setTestOn(true);
+                }}
+              >
                 <svg
                   width="13"
                   height="13"
@@ -101,7 +115,13 @@ export default function Classroom() {
             </div>
           </div>
           {/* Chat/Video */}
-          <VideoComponent config={agoraConfig} lessonId={lessonId} />
+          <VideoComponent
+            config={agoraConfig}
+            lessonId={lessonId}
+            childName={childName}
+            teacherName={agoraConfig?.teacherName ?? null}
+            participants={participants}
+          />
         </div>
         <div className="right-side-container--classroom">
           <div className="row--1">
@@ -173,7 +193,7 @@ export default function Classroom() {
               Verificăm dacă `agoraConfig` există ȘI dacă are secțiunea de `whiteboard`
               Dacă da, transmitem props-urile către WhiteBoard. Dacă nu, afișăm un text de loading.
             */}
-            {agoraConfig && agoraConfig.whiteboard ? (
+            {agoraConfig && agoraConfig.whiteboard && !testOn ? (
               <WhiteBoard
                 uuid={agoraConfig.whiteboard.uuid}
                 token={agoraConfig.whiteboard.token}
@@ -181,6 +201,8 @@ export default function Classroom() {
                 region={agoraConfig.whiteboard.region}
                 uid={agoraConfig.uid.toString()}
               />
+            ) : testOn ? (
+              <TestComponent />
             ) : (
               <div
                 style={{
