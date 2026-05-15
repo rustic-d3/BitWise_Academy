@@ -160,6 +160,7 @@ class Lesson(models.Model):
         blank=True,
     )
     generated_test = models.JSONField(null=True, blank=True)
+    is_test_active = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = "Lesson"
@@ -184,6 +185,16 @@ class Lesson(models.Model):
     def __str__(self):
         return f"Lesson {self.id} - {self.date_time}"
 
+
+class TestResult(models.Model):
+    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='test_results')
+    child = models.ForeignKey('ChildProfile', on_delete=models.CASCADE, related_name='test_results')
+    child_answer = models.JSONField(default=dict) 
+    score = models.FloatField(null=True, blank=True)
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+        return f"Rezultat {self.child.full_name} - Lecția {self.lesson.id} - Scor: {self.score}%"
+    
 class TestAttempt(models.Model):
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE)
     student = models.ForeignKey(User, on_delete=models.CASCADE)

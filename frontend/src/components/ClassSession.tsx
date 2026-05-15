@@ -89,7 +89,7 @@ export default function ClassSession({
     )?.full_name;
 
     navigate(`/classroom/${lesson.id}`, {
-      state: { childName }, 
+      state: { childName, childId },
     });
   };
 

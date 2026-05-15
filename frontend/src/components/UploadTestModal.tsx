@@ -41,9 +41,14 @@ export default function UploadTestModal({
     setError(null);
 
     try {
-      await api.post(`api/lessons/${lessonId}/upload-test/`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const response = await api.post(
+        `api/lessons/${lessonId}/upload-test/`,
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        },
+      );
+      console.log(response);
       onSuccess();
       onClose();
     } catch (err) {

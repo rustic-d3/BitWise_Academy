@@ -1,13 +1,12 @@
 import json
-import os
+import pdfplumber
 
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404
-import fitz
 from google import genai
 
 from .permissions import IsAdmin, IsParent, IsTeacher
-from .models import ChildProfile, Lesson, User
+from .models import ChildProfile, Lesson, TestResult, User
 from rest_framework import generics
 from rest_framework.generics import DestroyAPIView, GenericAPIView, RetrieveAPIView
 from rest_framework.decorators import  api_view, permission_classes
@@ -138,9 +137,9 @@ class CreateTestView(APIView):
         try:
             text_extras = ""
             
-            with fitz.open(stream=pdf_file.read(), filetype="pdf") as doc:
-                for pagina in doc:
-                    text_extras += pagina.get_text()
+            with pdfplumber.open(pdf_file) as pdf:
+                for page in pdf.pages:
+                    text_extras += page.extract_text() or ""
 
             if not text_extras.strip():
                 return Response({"error": "PDF-ul pare să fie gol sau scanat ca imagine."}, status=400)
@@ -195,6 +194,91 @@ class CreateTestView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=500)
 
+
+class StartTestView(APIView):
+    def post(self, request, lesson_id):
+        try:
+            lesson = Lesson.objects.get(id=lesson_id)
+            lesson.is_test_active = True
+            lesson.save()
+            
+            return Response({"message": "Testul a început!"}, status=status.HTTP_200_OK)
+        except Lesson.DoesNotExist:
+            return Response({"error": "Lecția nu a fost găsită."}, status=status.HTTP_404_NOT_FOUND)
+
+class TestStatusView(APIView):
+    def get(self, request, lesson_id):
+        try:
+            lesson = Lesson.objects.only('is_test_active').get(id=lesson_id)
+            return Response({
+                "is_test_active": lesson.is_test_active
+            }, status=status.HTTP_200_OK)
+            
+        except Lesson.DoesNotExist:
+            return Response({"error": "Lecția nu a fost găsită."}, status=status.HTTP_404_NOT_FOUND)
+
+class GetTestQuestionsView(APIView):
+    def get(self, request, lesson_id):
+        try:
+            lesson = Lesson.objects.only('generated_test', 'is_test_active').get(id=lesson_id)
+            
+            if not lesson.is_test_active:
+                return Response({"error": "Testul nu a început încă."}, status=403)
+                
+            return Response({
+                "test_data": lesson.generated_test
+            }, status=status.HTTP_200_OK)
+            
+        except Lesson.DoesNotExist:
+            return Response({"error": "Lecția nu a fost găsită."}, status=status.HTTP_404_NOT_FOUND)
+
+class SubmitTestView(APIView):
+    def post(self, request, lesson_id):
+        try:
+            lesson = Lesson.objects.get(id=lesson_id)
+            
+            child_id = request.data.get('child_id')
+            child_answers = request.data.get('answers') 
+            
+            try:
+                child = ChildProfile.objects.get(id=child_id)
+            except ChildProfile.DoesNotExist:
+                return Response({"error": "Copilul nu a fost găsit."}, status=404)
+
+            ai_test = lesson.generated_test 
+            if not ai_test:
+                return Response({"error": "Acest test nu are întrebări generate."}, status=400)
+
+            total_questions = len(ai_test)
+            correct_answers_count = 0
+            
+            for index_str, answer in child_answers.items():
+                index = int(index_str)
+                if index < total_questions and answer == ai_test[index].get("correct_answer"):
+                    correct_answers_count += 1
+                    
+            score = (correct_answers_count / total_questions) * 100 if total_questions > 0 else 0
+
+            result = TestResult.objects.create(
+                lesson=lesson,
+                child=child,
+                child_answer=child_answers,
+                score=score
+            )
+            result.save()
+            
+
+            return Response({
+                "message": "Test salvat cu succes!",
+                "score": score,
+                "correct_answers": correct_answers_count,
+                "total_questions": total_questions
+            }, status=status.HTTP_201_CREATED)
+
+        except Lesson.DoesNotExist:
+            return Response({"error": "Lecția nu a fost găsită."}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])  
 

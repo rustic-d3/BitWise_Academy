@@ -120,7 +120,7 @@ class LessonJoinSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Lesson
-        fields = ['id', 'channel_name', 'date_time', 'agora_data']
+        fields = ['id', 'channel_name', 'date_time', 'agora_data', 'is_test_active',]
 
     def get_agora_data(self, obj):
 

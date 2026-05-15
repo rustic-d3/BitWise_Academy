@@ -1,7 +1,7 @@
 
 from django.contrib import admin
 from django.urls import path, include
-from api.views import  ChildProfileCreateView, ChildProfileUpdateView, ChildProfileView, CreateTestView, CreateUserView, LessonDeleteView, LessonJoinView, LessonSkipView, TeacherProfileView,ParentProfileView, CreateClassroomView, close_channel
+from api.views import  ChildProfileCreateView, ChildProfileUpdateView, ChildProfileView, CreateTestView, CreateUserView, GetTestQuestionsView, LessonDeleteView, LessonJoinView, LessonSkipView, StartTestView, SubmitTestView, TeacherProfileView,ParentProfileView, CreateClassroomView, TestStatusView, close_channel
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
@@ -28,7 +28,11 @@ urlpatterns = [
     path("api/lessons/<int:id>/cancel-lesson", LessonDeleteView.as_view(), name="cancel_session"),
     
     #Tests with AI urls 
-    path("api/lessons/<int:lesson_id>/upload-test/", CreateTestView.as_view(), name="creating_tests")
+    path("api/lessons/<int:lesson_id>/upload-test/", CreateTestView.as_view(), name="creating_tests"),
+    path('api/lessons/<int:lesson_id>/start-test/', StartTestView.as_view(), name='start-test'),
+    path('api/lessons/<int:lesson_id>/submit-test/', SubmitTestView.as_view(), name='submit-test'),
+    path('api/lessons/<int:lesson_id>/test-status/', TestStatusView.as_view(), name='test-status'),
+    path('api/lessons/<int:lesson_id>/test-questions/', GetTestQuestionsView.as_view(), name="test-questions"),
 
     
     

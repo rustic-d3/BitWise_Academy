@@ -15,11 +15,25 @@ export default function Classroom() {
   const navigate = useNavigate();
   const user_role = getUserRole() || "";
   const [testOn, setTestOn] = useState(false);
+  const [testCompleted, setTestCompleted] = useState(false);
   const location = useLocation();
   const childName = location.state?.childName ?? null;
+  const childId = location.state?.childId ?? null;
   const [participants, setParticipants] = useState<Record<string, string>>({});
 
-  function startTest() {}
+  async function startTest() {
+    try {
+      await api.post(`/api/lessons/${lessonId}/start-test/`);
+      setTestOn(true);
+    } catch (err) {
+      console.error("Eroare la pornirea testului:", err);
+      alert("Nu s-a putut porni testul.");
+    }
+  }
+  const endTest = () => {
+    setTestOn(false);
+    setTestCompleted(true);
+  };
 
   useEffect(() => {
     const fetchSessionPass = async () => {
@@ -34,6 +48,26 @@ export default function Classroom() {
     if (lessonId) fetchSessionPass();
   }, [lessonId]);
 
+  useEffect(() => {
+    if (user_role === "teacher" || testOn || testCompleted) return;
+
+    const checkTestStatus = async () => {
+      try {
+        const response = await api.get(`/api/lessons/${lessonId}/test-status/`);
+
+        if (response.data.is_test_active) {
+          setTestOn(true);
+          console.log("testul a inceput!");
+        }
+      } catch (err) {
+        console.error("Eroare la verificarea statusului testului:", err);
+      }
+    };
+
+    const interval = setInterval(checkTestStatus, 3000);
+
+    return () => clearInterval(interval);
+  }, [lessonId, user_role, testOn]);
   return (
     <div className="page-wrapper">
       <Navbar role={user_role} />
@@ -91,27 +125,28 @@ export default function Classroom() {
               </button>
             </div>
             <div className="buttons-container-right">
-              <button
-                className="btn--outline"
-                onClick={() => {
-                  startTest();
-                  setTestOn(true);
-                }}
-              >
-                <svg
-                  width="13"
-                  height="13"
-                  viewBox="0 0 13 13"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
+              {user_role === "teacher" && !testCompleted && (
+                <button
+                  className="btn--outline"
+                  onClick={() => {
+                    startTest();
+                  }}
                 >
-                  <path
-                    d="M12.8758 0.124178C12.7871 0.0354625 12.6638 -0.00937748 12.5386 0.00164208C12.4518 0.00931007 10.3953 0.205936 8.97791 1.62337C8.78321 1.81812 0.321662 10.2797 0.124199 10.4772C-0.0413995 10.6427 -0.0413995 10.9112 0.124199 11.0768L1.92321 12.8758C2.006 12.9586 2.11452 13 2.22304 13C2.33156 13 2.44008 12.9586 2.52286 12.8758L11.3766 4.02206C12.7941 2.60459 12.9907 0.548177 12.9983 0.461341C13.0094 0.336368 12.9645 0.212918 12.8758 0.124178ZM2.22307 11.9763L1.02371 10.777L1.62342 10.1773L2.82277 11.3766L2.22307 11.9763ZM9.87747 4.32189L8.67812 3.12254L9.2778 2.52286L10.4772 3.72222L9.87747 4.32189Z"
-                    fill="#FF6116"
-                  />
-                </svg>
-                Începe Testul
-              </button>
+                  <svg
+                    width="13"
+                    height="13"
+                    viewBox="0 0 13 13"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M12.8758 0.124178C12.7871 0.0354625 12.6638 -0.00937748 12.5386 0.00164208C12.4518 0.00931007 10.3953 0.205936 8.97791 1.62337C8.78321 1.81812 0.321662 10.2797 0.124199 10.4772C-0.0413995 10.6427 -0.0413995 10.9112 0.124199 11.0768L1.92321 12.8758C2.006 12.9586 2.11452 13 2.22304 13C2.33156 13 2.44008 12.9586 2.52286 12.8758L11.3766 4.02206C12.7941 2.60459 12.9907 0.548177 12.9983 0.461341C13.0094 0.336368 12.9645 0.212918 12.8758 0.124178ZM2.22307 11.9763L1.02371 10.777L1.62342 10.1773L2.82277 11.3766L2.22307 11.9763ZM9.87747 4.32189L8.67812 3.12254L9.2778 2.52286L10.4772 3.72222L9.87747 4.32189Z"
+                      fill="#FF6116"
+                    />
+                  </svg>
+                  Începe Testul
+                </button>
+              )}
             </div>
           </div>
           {/* Chat/Video */}
@@ -202,7 +237,12 @@ export default function Classroom() {
                 uid={agoraConfig.uid.toString()}
               />
             ) : testOn ? (
-              <TestComponent />
+              <TestComponent
+                lessonId={lessonId ? Number(lessonId) : undefined}
+                userRole={user_role}
+                childId={childId}
+                closeTest={endTest}
+              />
             ) : (
               <div
                 style={{

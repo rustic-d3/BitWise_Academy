@@ -8,19 +8,16 @@ interface DecodedToken {
 }
 
 export function getUserRole(): string | null {
-  // 1. Get the token from localStorage
-  const token = localStorage.getItem("access"); // Replace 'token' with your key if it's different
+  const token = localStorage.getItem("access");
 
   if (!token) {
     return null;
   }
 
   try {
-    // 2. Decode the token payload
     const decoded = jwtDecode<DecodedToken>(token);
 
-    // 3. Extract and return the role
-    return decoded.role || null;
+    return decoded.role.toLowerCase() || null;
   } catch (error) {
     console.error("Failed to decode token:", error);
     return null;
