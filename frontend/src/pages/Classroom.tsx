@@ -68,6 +68,43 @@ export default function Classroom() {
 
     return () => clearInterval(interval);
   }, [lessonId, user_role, testOn]);
+
+  useEffect(() => {
+    // Dacă e profesor, nu are sens să marcăm prezența ca elev
+    if (user_role === "teacher" || !childId || !agoraConfig) return;
+
+    const markPresence = async () => {
+      try {
+        await api.post(`/api/lessons/${lessonId}/mark-attendance/`, {
+          child_id: childId,
+        });
+        console.log("Prezența ta a fost înregistrată automat!");
+      } catch (err) {
+        console.error("Eroare la marcarea prezenței:", err);
+      }
+    };
+
+    markPresence();
+  }, [lessonId, childId, user_role, agoraConfig]);
+
+  useEffect(() => {
+  if (user_role !== "teacher" || !testOn) return;
+  const syncTestStatus = async () => {
+    try {
+      const response = await api.get(`/api/lessons/${lessonId}/test-status/`);
+      if (response.data.is_test_active === false) {
+        setTestOn(false); 
+        alert("Toți elevii prezenți au finalizat testul. Revenim la lecție!");
+      }
+    } catch (err) {
+      console.error("Eroare la sincronizarea statusului testului", err);
+    }
+  };
+
+  const interval = setInterval(syncTestStatus, 3000);
+
+  return () => clearInterval(interval);
+}, [lessonId, user_role, testOn]);
   return (
     <div className="page-wrapper">
       <Navbar role={user_role} />

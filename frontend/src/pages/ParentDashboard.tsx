@@ -10,7 +10,6 @@ import InfoCard from "../components/InfoCard";
 export default function ParentDashboard() {
   const role = getUserRole()?.toLowerCase() as "parent";
   const [loading, setLoading] = useState(true);
-  const [parentData, setParentData] = useState(null);
   const [children, setChildren] = useState<any[]>([]);
   const [activeChild, setActiveChild] = useState<any>(null);
   const [activeChildClassroom, setActiveChildClassroom] = useState<any>(null);
@@ -22,7 +21,6 @@ export default function ParentDashboard() {
       try {
         const response = await api.get("api/parent/profile");
         if (response.status === 200) {
-          setParentData(response.data);
           setChildren(response.data.children);
           localStorage.setItem("childrenNumber", response.data.children.length);
           setActiveChild(response.data.children[0]);

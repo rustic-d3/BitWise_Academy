@@ -87,6 +87,27 @@ class ChildDetailView(RetrieveAPIView):
         context["child_id"] = self.kwargs.get("id")  # ← inject child id
         return context
 
+class MarkAttendanceView(APIView):
+    def post(self, request, lesson_id):
+        child_id = request.data.get('child_id')
+        
+        if not child_id:
+            return Response({"error": "ID-ul copilului lipsește."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            lesson = Lesson.objects.get(id=lesson_id)
+            child = ChildProfile.objects.get(id=child_id)
+            
+            lesson.present_students.add(child)
+            # daca copilul a marcat prezenta deja, nu se va mai modifica de 2 ori baza de date.
+            
+            return Response({"message": "Prezență marcată cu succes!"}, status=status.HTTP_200_OK)
+            
+        except Lesson.DoesNotExist:
+            return Response({"error": "Lecția nu a fost găsită."}, status=status.HTTP_404_NOT_FOUND)
+        except ChildProfile.DoesNotExist:
+            return Response({"error": "Copilul nu a fost găsit."}, status=status.HTTP_404_NOT_FOUND)
+
 class LessonJoinView(RetrieveAPIView):
     queryset = Lesson.objects.all()
     serializer_class = LessonJoinSerializer
@@ -238,7 +259,7 @@ class SubmitTestView(APIView):
             lesson = Lesson.objects.get(id=lesson_id)
             
             child_id = request.data.get('child_id')
-            child_answers = request.data.get('answers') 
+            child_answers = request.data.get('answers', {}) # Punem un default {} ca să nu crape dacă e gol
             
             try:
                 child = ChildProfile.objects.get(id=child_id)
@@ -259,26 +280,34 @@ class SubmitTestView(APIView):
                     
             score = (correct_answers_count / total_questions) * 100 if total_questions > 0 else 0
 
-            result = TestResult.objects.create(
+            TestResult.objects.create(
                 lesson=lesson,
                 child=child,
                 child_answer=child_answers,
                 score=score
             )
-            result.save()
             
+            present_count = lesson.present_students.count()
+            results_count = TestResult.objects.filter(lesson=lesson).count()
+            
+            if results_count >= present_count and present_count > 0:
+                lesson.is_test_active = False
+                lesson.save()
 
             return Response({
                 "message": "Test salvat cu succes!",
                 "score": score,
                 "correct_answers": correct_answers_count,
-                "total_questions": total_questions
+                "total_questions": total_questions,
+                "is_test_active": lesson.is_test_active # Îi spunem frontend-ului starea actuală
             }, status=status.HTTP_201_CREATED)
 
         except Lesson.DoesNotExist:
             return Response({"error": "Lecția nu a fost găsită."}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])  
 

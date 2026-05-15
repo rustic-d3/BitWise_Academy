@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 
-from .models import ChildProfile, Classroom, Lesson, TeacherProfile, ParentProfile, LessonAttendance
+from .models import ChildProfile, Classroom, Lesson, TeacherProfile, ParentProfile
 from .signals import sync_lessons_for_classroom
 
 User = get_user_model()
@@ -59,9 +59,15 @@ class ChildProfileAdmin(admin.ModelAdmin):
 
 @admin.register(Lesson)
 class LessonAdmin(admin.ModelAdmin):
-    pass
+    list_display = ["channel_name", "date_time", "get_present_students", "get_skipped_by"]
 
+    def get_present_students(self, obj):
+        return ", ".join([child.full_name for child in obj.present_students.all()])
+    
+    get_present_students.short_description = "Elevi Prezenți"
 
-@admin.register(LessonAttendance)
-class LessonAttendanceAdmin(admin.ModelAdmin):
-    pass
+    def get_skipped_by(self, obj):
+        return ", ".join([child.full_name for child in obj.skipped_by.all()])
+        
+    get_skipped_by.short_description = "Absenți"
+

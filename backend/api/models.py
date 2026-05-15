@@ -154,7 +154,13 @@ class Lesson(models.Model):
     
     channel_name = models.CharField(max_length=255, unique=True, blank=True, null=True )
     whiteboard_uuid = models.CharField(max_length=255,unique=True, blank=True, null=True)
-    skipped_by = models.ManyToManyField(          # ← new
+    present_students = models.ManyToManyField(
+        'ChildProfile', 
+        blank=True, 
+        related_name='attended_lessons',
+        null=True
+    )
+    skipped_by = models.ManyToManyField(          
         "ChildProfile",
         related_name="skipped_lessons",
         blank=True,
@@ -202,11 +208,3 @@ class TestAttempt(models.Model):
     score = models.FloatField()
     completed_at = models.DateTimeField(auto_now_add=True)
 
-
-class LessonAttendance(models.Model):
-    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name="attendance")
-    student = models.ForeignKey(ChildProfile, on_delete=models.CASCADE)
-    attended = models.BooleanField(default=False)
-
-    class Meta:
-        unique_together = ["lesson", "student"]
