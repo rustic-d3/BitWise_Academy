@@ -1,3 +1,4 @@
+from datetime import timedelta
 import time
 
 from django.utils import timezone
@@ -213,7 +214,8 @@ class TeacherProfileBasicSerializer(serializers.ModelSerializer):
         fields = ["first_name", "last_name", "description", "teaching_module"]
 
 class ClassroomBasicSerializer(serializers.ModelSerializer):
-    lessons = LessonSerializer(many=True, read_only=True)
+    # Schimbăm de la LessonSerializer la SerializerMethodField
+    lessons = serializers.SerializerMethodField()
     students = ChildProfileBasicSerializer(many=True, read_only=True)
     teacher = TeacherProfileBasicSerializer(read_only=True)
 
@@ -221,6 +223,15 @@ class ClassroomBasicSerializer(serializers.ModelSerializer):
         model = Classroom
         fields = ["id", "titlu","teacher" , "students", "schedule_day", "schedule_time", "is_canceled", "lessons", "classroom_type"]
 
+    def get_lessons(self, obj):
+        buffer_time = timezone.now() - timedelta(hours=1)
+        
+        active_lessons = obj.lessons.filter(
+            is_canceled=False,
+            date_time__gte=buffer_time
+        ).order_by("date_time")
+
+        return LessonSerializer(active_lessons, many=True).data
 
 
 class ChildProfileSerializer(serializers.ModelSerializer):
@@ -245,9 +256,10 @@ class ClassroomSerializer(serializers.ModelSerializer):
 
     def get_lessons(self, obj):
         child_id = self.context.get("child_id")
+        buffer_time = timezone.now() - timedelta(hours=1)
         lessons = obj.lessons.filter(
             is_canceled=False,
-            date_time__gte=timezone.now()
+            date_time__gte=buffer_time
         ).order_by("date_time")
 
         if child_id:

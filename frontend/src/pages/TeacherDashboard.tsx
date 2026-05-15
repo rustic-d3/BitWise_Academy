@@ -20,6 +20,7 @@ export default function TeacherDashboard() {
         if (response.status === 200) {
           setTeacherData(response.data);
           setClassrooms(response.data.classrooms);
+          console.log(response.data);
         }
       } catch (error) {
         console.error("Failed to fetch teacher data:", error);
@@ -50,6 +51,7 @@ export default function TeacherDashboard() {
       (a, b) =>
         new Date(a.date_time).getTime() - new Date(b.date_time).getTime(),
     );
+  console.log(allLessons);
 
   return (
     <div className="page-wrapper">

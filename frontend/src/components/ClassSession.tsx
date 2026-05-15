@@ -62,13 +62,19 @@ export default function ClassSession({
   const [isSkipping, setIsSkipping] = useState(false);
 
   const navigate = useNavigate();
-
+  const [showNoCreditsModal, setShowNoCreditsModal] = useState(false);
   const date = new Date(lesson.date_time).toLocaleString("ro-RO", {
     weekday: "short",
     day: "numeric",
     month: "short",
     year: "numeric",
   });
+  const lessonDate = new Date(lesson.date_time);
+  const today = new Date();
+  const isToday =
+    lessonDate.getDate() === today.getDate() &&
+    lessonDate.getMonth() === today.getMonth() &&
+    lessonDate.getFullYear() === today.getFullYear();
 
   async function cancelLesson(lessonId: number) {
     try {
@@ -83,14 +89,35 @@ export default function ClassSession({
     }
   }
 
-  const handleJoin = () => {
-    const childName = lesson.classroom.students.find(
-      (s) => s.id === childId,
-    )?.full_name;
+  const handleJoin = async () => {
+    if (role === "teacher") {
+      navigate(`/classroom/${lesson.id}`);
+      return;
+    }
+    const student = lesson.classroom.students.find((s) => s.id === childId);
+    const childName = student?.full_name;
 
-    navigate(`/classroom/${lesson.id}`, {
-      state: { childName, childId },
-    });
+    try {
+      const response = await api.post(
+        `/api/lessons/${lesson.id}/consume-credit/`,
+        {
+          child_id: childId,
+        },
+      );
+
+      if (response.status === 200) {
+        navigate(`/classroom/${lesson.id}`, {
+          state: { childName, childId },
+        });
+      }
+    } catch (err: any) {
+      if (err.response && err.response.status === 402) {
+        setShowNoCreditsModal(true);
+      } else {
+        console.error("Eroare la intrarea la oră:", err);
+        alert("A apărut o eroare neașteptată.");
+      }
+    }
   };
 
   const handleSkipConfirmed = async () => {
@@ -153,13 +180,22 @@ export default function ClassSession({
             <p>{lesson.classroom.classroom_type}</p>
           </div>
           <div className="col-2">
-            {lesson.classroom.students.map((student) => (
-              <div className="student-container" key={student.id}>
-                <CheckIcon />
-                <p>{student.full_name}</p>
-                {role === "teacher" && <BellIcon />}
-              </div>
-            ))}
+            {lesson.classroom.students.map((student) => {
+              // Verificăm dacă ID-ul acestui student se află în lista celor care au dat skip
+              const hasSkipped = lesson.skipped_by?.includes(student.id);
+
+              return (
+                <div className="student-container" key={student.id}>
+                  {!hasSkipped && <CheckIcon />}
+
+                  <p className={hasSkipped ? "student-skipped" : ""}>
+                    {student.full_name} {hasSkipped && "(Skipped)"}
+                  </p>
+
+                  {role === "teacher" && !hasSkipped && <BellIcon />}
+                </div>
+              );
+            })}
           </div>
         </div>
         <div className="row-2">
@@ -228,7 +264,11 @@ export default function ClassSession({
               </button>
             )}
 
-            <button className="btn--primary" onClick={handleJoin}>
+            <button
+              className="btn--primary"
+              onClick={handleJoin}
+              // disabled={!isToday} // in development trebuie pus asta aici, momentan doar il comentez
+            >
               <svg
                 width="10"
                 height="11"
@@ -251,8 +291,58 @@ export default function ClassSession({
                   strokeLinejoin="round"
                 />
               </svg>
-              Intră
+              {isToday ? "Intră" : "Indisponibil"}
             </button>
+            {showNoCreditsModal && (
+              <div className="modal-overlay">
+                <div className="modal-box text-center">
+                  <div style={{ fontSize: "50px" }}>
+                    <svg
+                      width="77"
+                      height="77"
+                      viewBox="0 0 77 77"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M28.875 54.5417C31.6033 52.5195 34.9214 51.3334 38.5 51.3334C42.0786 51.3334 45.3966 52.5195 48.125 54.5417"
+                        stroke="#FF6116"
+                        stroke-width="4.8125"
+                        stroke-linecap="round"
+                      />
+                      <path
+                        d="M48.1253 38.5C49.8972 38.5 51.3337 36.3454 51.3337 33.6875C51.3337 31.0296 49.8972 28.875 48.1253 28.875C46.3534 28.875 44.917 31.0296 44.917 33.6875C44.917 36.3454 46.3534 38.5 48.1253 38.5Z"
+                        fill="#FF6116"
+                      />
+                      <path
+                        d="M28.8753 38.5C30.6472 38.5 32.0837 36.3454 32.0837 33.6875C32.0837 31.0296 30.6472 28.875 28.8753 28.875C27.1034 28.875 25.667 31.0296 25.667 33.6875C25.667 36.3454 27.1034 38.5 28.8753 38.5Z"
+                        fill="#FF6116"
+                      />
+                      <path
+                        d="M70.5837 38.5C70.5837 53.624 70.5837 61.1864 65.8851 65.8847C61.1868 70.5833 53.6244 70.5833 38.5003 70.5833C23.3761 70.5833 15.814 70.5833 11.1155 65.8847C6.41699 61.1864 6.41699 53.624 6.41699 38.5C6.41699 23.3757 6.41699 15.8136 11.1155 11.1151C15.814 6.41663 23.3761 6.41663 38.5003 6.41663C53.6244 6.41663 61.1868 6.41663 65.8851 11.1151C69.0093 14.2392 70.0562 18.6293 70.4069 25.6666"
+                        stroke="#FF6116"
+                        stroke-width="4.8125"
+                        stroke-linecap="round"
+                      />
+                    </svg>
+                  </div>
+                  <h3 className="modal-title">Credite insuficiente</h3>
+                  <p>
+                    Ne pare rău, dar nu mai ai credite disponibile pentru a
+                    participa la această lecție. Te rugăm să îl contactezi pe
+                    părintele tău pentru a reîncărca contul.
+                  </p>
+                  <div className="modal-actions">
+                    <button
+                      className="btn--primary"
+                      onClick={() => setShowNoCreditsModal(false)}
+                    >
+                      Am înțeles
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

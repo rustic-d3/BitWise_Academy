@@ -174,9 +174,10 @@ class Lesson(models.Model):
         
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
+        
         if not self.channel_name:
             self.channel_name = f"lesson_{self.id}_{self.classroom.id}"
-            super().save(*args, **kwargs)
+            super().save(update_fields=['channel_name'])
         
     def cancel_and_reschedule(self, new_datetime):
         self.is_canceled = True

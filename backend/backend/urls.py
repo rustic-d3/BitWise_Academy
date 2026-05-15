@@ -1,7 +1,7 @@
 
 from django.contrib import admin
 from django.urls import path, include
-from api.views import  ChildProfileCreateView, ChildProfileUpdateView, ChildProfileView, CreateTestView, CreateUserView, GetTestQuestionsView, LessonDeleteView, LessonJoinView, LessonSkipView, MarkAttendanceView, StartTestView, SubmitTestView, TeacherProfileView,ParentProfileView, CreateClassroomView, TestStatusView, close_channel
+from api.views import  ChildProfileCreateView, ChildProfileUpdateView, ChildProfileView, ConsumeCreditView, CreateTestView, CreateUserView, GetTestQuestionsView, LessonDeleteView, LessonJoinView, LessonSkipView, MarkAttendanceView, StartTestView, SubmitTestView, TeacherProfileView,ParentProfileView, CreateClassroomView, TestStatusView, close_channel
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
@@ -23,7 +23,7 @@ urlpatterns = [
     # clasrooms urls
     path("api/classroom/create", CreateClassroomView.as_view(), name="create_classroom"),
     path('api/lessons/<int:id>/join/', LessonJoinView.as_view(), name='lesson_join'),
-    path("lessons/<int:id>/skip/", LessonSkipView.as_view(), name="lesson-skip"),
+    path("api/lessons/<int:id>/skip/", LessonSkipView.as_view(), name="lesson-skip"),
     path("api/lessons/<int:lesson_id>/close-channel/", close_channel, name="close_channel"),
     path("api/lessons/<int:id>/cancel-lesson", LessonDeleteView.as_view(), name="cancel_session"),
     
@@ -34,6 +34,7 @@ urlpatterns = [
     path('api/lessons/<int:lesson_id>/test-status/', TestStatusView.as_view(), name='test-status'),
     path('api/lessons/<int:lesson_id>/test-questions/', GetTestQuestionsView.as_view(), name="test-questions"),
     path('api/lessons/<int:lesson_id>/mark-attendance/', MarkAttendanceView.as_view(), name='mark-attendance'),
+    path('api/lessons/<int:lesson_id>/consume-credit/', ConsumeCreditView.as_view(), name='consume-credit'),
 
     
     

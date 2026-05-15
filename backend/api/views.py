@@ -1,6 +1,7 @@
+from datetime import timedelta
 import json
 import pdfplumber
-
+from django.db import transaction
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404
 from google import genai
@@ -114,10 +115,28 @@ class LessonJoinView(RetrieveAPIView):
     permission_classes = [IsAuthenticated]
     lookup_field = "id"
 
-class LessonDeleteView(DestroyAPIView):
-    queryset = Lesson.objects.all()
-    serializer_class = LessonSerializer
-    lookup_field = "id"
+class LessonDeleteView(APIView):
+    def delete(self, request, id): 
+        try:
+            lesson = Lesson.objects.get(id=id)
+            classroom = lesson.classroom
+            
+            ultima_lectie = classroom.lessons.order_by('-date_time').first()
+            
+            if ultima_lectie:
+                noua_data = ultima_lectie.date_time + timedelta(days=7)
+            else:
+                noua_data = lesson.date_time + timedelta(days=7)
+            
+            lesson.cancel_and_reschedule(noua_data)
+            
+            return Response(
+                {"message": "Lecția a fost anulată și o nouă sesiune a fost adăugată la finalul cursului."}, 
+                status=status.HTTP_200_OK
+            )
+            
+        except Lesson.DoesNotExist:
+            return Response({"error": "Lecția nu a fost găsită."}, status=status.HTTP_404_NOT_FOUND)
     
 class LessonSkipView(GenericAPIView):
     queryset = Lesson.objects.all()
@@ -143,7 +162,41 @@ class LessonSkipView(GenericAPIView):
         lesson.skipped_by.add(child)
         return Response({"detail": "Lesson skipped."}, status=status.HTTP_200_OK)
 
+class ConsumeCreditView(APIView):
+    def post(self, request, lesson_id):
+        child_id = request.data.get('child_id')
+        
+        try:
+            with transaction.atomic():
+                lesson = Lesson.objects.get(id=lesson_id)
+                child = ChildProfile.objects.select_for_update().get(id=child_id)
+                
+                if child in lesson.present_students.all():
+                    return Response(
+                        {"message": "Acces deja deblocat. Te reconectăm!"}, 
+                        status=status.HTTP_200_OK
+                    )
 
+                if child.credits <= 0:
+                    return Response(
+                        {"error": "Nu ai suficiente credite pentru a intra la această oră."}, 
+                        status=status.HTTP_402_PAYMENT_REQUIRED
+                    )
+                
+                child.credits -= 1
+                child.save()
+                
+                
+                lesson.present_students.add(child)
+                
+                return Response({"message": "Credit consumat. Acces permis!"}, status=status.HTTP_200_OK)
+                
+        except Lesson.DoesNotExist:
+            return Response({"error": "Lecția nu a fost găsită."}, status=404)
+        except ChildProfile.DoesNotExist:
+            return Response({"error": "Copilul nu a fost găsit."}, status=404)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
 
 #Tests views  
 
@@ -214,7 +267,6 @@ class CreateTestView(APIView):
             return Response({"error": "AI-ul a returnat un format invalid."}, status=500)
         except Exception as e:
             return Response({"error": str(e)}, status=500)
-
 
 class StartTestView(APIView):
     def post(self, request, lesson_id):

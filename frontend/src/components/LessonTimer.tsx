@@ -1,0 +1,97 @@
+import { useState, useEffect } from "react";
+
+interface Props {
+  startTime: string; // Trimitem data și ora din backend (ex: lesson.date_time)
+  durationMinutes?: number; // Opțional, default 60 de minute
+}
+
+export default function LessonTimer({
+  startTime,
+  durationMinutes = 60,
+}: Props) {
+  const [timeLeft, setTimeLeft] = useState<string>("00 : 00");
+
+  useEffect(() => {
+    if (!startTime) return;
+
+    const startMillis = new Date(startTime).getTime();
+    const durationMillis = durationMinutes * 60 * 1000;
+    const endMillis = startMillis + durationMillis;
+
+    const updateTimer = () => {
+      const now = new Date().getTime();
+      const difference = endMillis - now;
+
+      // 1. Dacă lecția s-a terminat
+      if (difference <= 0) {
+        setTimeLeft("00 : 00");
+        return true; 
+      }
+
+      // 2. Dacă elevul/profesorul a intrat mai devreme (lecția nu a început încă)
+      if (difference > durationMillis) {
+        setTimeLeft(`${durationMinutes.toString().padStart(2, "0")} : 00`);
+        return false;
+      }
+
+      // 3. Lecția este în curs de desfășurare
+      const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+      const formattedMinutes = minutes.toString().padStart(2, "0");
+      const formattedSeconds = seconds.toString().padStart(2, "0");
+
+      setTimeLeft(`${formattedMinutes} : ${formattedSeconds}`);
+      return false;
+    };
+
+    const isDone = updateTimer();
+    if (isDone) return;
+
+    // actualizare în fiecare secundă
+    const intervalId = setInterval(() => {
+      const done = updateTimer();
+      if (done) {
+        clearInterval(intervalId);
+      }
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [startTime, durationMinutes]);
+
+  return (
+    <button className="btn--outline--nohover">
+      <svg
+        width="17"
+        height="17"
+        viewBox="0 0 17 17"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        style={{ marginRight: "8px" }}
+      >
+        <g clipPath="url(#clip0_1_2836)">
+          <path
+            d="M4.20377 1.54813L1.54752 4.20438L0.0449219 2.70178L2.70118 0.0455322L4.20377 1.54813Z"
+            fill="#FF6116"
+          />
+          <path
+            fillRule="evenodd"
+            clipRule="evenodd"
+            d="M15.4056 9.03125C15.4056 10.418 14.9968 11.7094 14.2933 12.7913L16.6881 15.1862L15.1855 16.6888L12.873 14.3763C11.6821 15.352 10.1591 15.9375 8.4993 15.9375C6.83957 15.9375 5.31658 15.352 4.1256 14.3763L1.81314 16.6888L0.310547 15.1862L2.7054 12.7913C2.0018 11.7094 1.59305 10.418 1.59305 9.03125C1.59305 5.21703 4.68508 2.125 8.4993 2.125C12.3135 2.125 15.4056 5.21703 15.4056 9.03125ZM7.43689 5.31247V10.0026L9.8731 12.4388L11.3757 10.9362L9.56189 9.12237V5.31247H7.43689Z"
+            fill="#FF6116"
+          />
+          <path
+            d="M15.4512 4.20451L12.7949 1.54826L14.2975 0.0456543L16.9538 2.7019L15.4512 4.20451Z"
+            fill="#FF6116"
+          />
+        </g>
+        <defs>
+          <clipPath id="clip0_1_2836">
+            <rect width="17" height="17" fill="white" />
+          </clipPath>
+        </defs>
+      </svg>
+      {timeLeft}
+    </button>
+  );
+}
