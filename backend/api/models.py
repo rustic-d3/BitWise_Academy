@@ -198,6 +198,11 @@ class TestResult(models.Model):
     child_answer = models.JSONField(default=dict) 
     score = models.FloatField(null=True, blank=True)
     submitted_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = "TestResult"
+        verbose_name_plural = "Test Results"
+        
     def __str__(self):
         return f"Rezultat {self.child.full_name} - Lecția {self.lesson.id} - Scor: {self.score}%"
     

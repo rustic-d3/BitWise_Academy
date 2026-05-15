@@ -25,9 +25,13 @@ export default function Classroom() {
     try {
       await api.post(`/api/lessons/${lessonId}/start-test/`);
       setTestOn(true);
-    } catch (err) {
-      console.error("Eroare la pornirea testului:", err);
-      alert("Nu s-a putut porni testul.");
+    } catch (err: any) {
+      if (err.response && err.response.data && err.response.data.error) {
+        alert(err.response.data.error);
+      } else {
+        console.error("Eroare la pornirea testului:", err);
+        alert("Nu s-a putut porni testul din cauza unei erori de server.");
+      }
     }
   }
   const endTest = () => {
@@ -88,23 +92,23 @@ export default function Classroom() {
   }, [lessonId, childId, user_role, agoraConfig]);
 
   useEffect(() => {
-  if (user_role !== "teacher" || !testOn) return;
-  const syncTestStatus = async () => {
-    try {
-      const response = await api.get(`/api/lessons/${lessonId}/test-status/`);
-      if (response.data.is_test_active === false) {
-        setTestOn(false); 
-        alert("Toți elevii prezenți au finalizat testul. Revenim la lecție!");
+    if (user_role !== "teacher" || !testOn) return;
+    const syncTestStatus = async () => {
+      try {
+        const response = await api.get(`/api/lessons/${lessonId}/test-status/`);
+        if (response.data.is_test_active === false) {
+          setTestOn(false);
+          alert("Toți elevii prezenți au finalizat testul. Revenim la lecție!");
+        }
+      } catch (err) {
+        console.error("Eroare la sincronizarea statusului testului", err);
       }
-    } catch (err) {
-      console.error("Eroare la sincronizarea statusului testului", err);
-    }
-  };
+    };
 
-  const interval = setInterval(syncTestStatus, 3000);
+    const interval = setInterval(syncTestStatus, 3000);
 
-  return () => clearInterval(interval);
-}, [lessonId, user_role, testOn]);
+    return () => clearInterval(interval);
+  }, [lessonId, user_role, testOn]);
   return (
     <div className="page-wrapper">
       <Navbar role={user_role} />

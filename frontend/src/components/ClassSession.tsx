@@ -120,7 +120,6 @@ export default function ClassSession({
         <UploadTestModal
           lessonId={lesson.id}
           onClose={() => setShowUploadTest(false)}
-          onSuccess={() => console.log("Test uploaded!")}
         />
       )}
 

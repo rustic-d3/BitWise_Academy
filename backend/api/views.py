@@ -223,6 +223,18 @@ class StartTestView(APIView):
             lesson.is_test_active = True
             lesson.save()
             
+            if not lesson.generated_test:
+                return Response(
+                    {"error": "Nu poți porni testul pentru că nu a fost încărcat sau generat niciun test pentru această lecție!"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            if lesson.present_students.count() == 0:
+                return Response(
+                    {"error": "Nu se poate începe testul. Niciun elev nu este prezent la oră!"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
             return Response({"message": "Testul a început!"}, status=status.HTTP_200_OK)
         except Lesson.DoesNotExist:
             return Response({"error": "Lecția nu a fost găsită."}, status=status.HTTP_404_NOT_FOUND)

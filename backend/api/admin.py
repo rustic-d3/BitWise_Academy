@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 
-from .models import ChildProfile, Classroom, Lesson, TeacherProfile, ParentProfile
+from .models import ChildProfile, Classroom, Lesson, TeacherProfile, ParentProfile, TestResult
 from .signals import sync_lessons_for_classroom
 
 User = get_user_model()
@@ -71,3 +71,7 @@ class LessonAdmin(admin.ModelAdmin):
         
     get_skipped_by.short_description = "Absenți"
 
+
+@admin.register(TestResult)
+class TestResultAdmin(admin.ModelAdmin):
+    list_display = ["child", "lesson", "score", "submitted_at"]
