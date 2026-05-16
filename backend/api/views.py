@@ -437,6 +437,7 @@ def trimite_raport_async(lesson, child, parent_email, ai_test):
             Ești un asistent educațional profesionist și prietenos.
             Scrie un email scurt (maxim 3 paragrafe) către un părinte.
             Nume copil: {child.full_name}.
+            Profesor copil: {lesson.classroom.teacher.user.last_name} {lesson.classroom.teacher.user.first_name}
             Data și titlul lecției: {lesson.classroom.titlu} - {lesson.date_time}.
             Scor la testul de final: {scor}%.
             Greșeli făcute de copil (dacă există): {greseli}.
@@ -451,6 +452,7 @@ def trimite_raport_async(lesson, child, parent_email, ai_test):
             Ești un asistent educațional profesionist și prietenos.
             Scrie un email scurt (maxim 3 paragrafe) către un părinte.
             Nume copil: {child.full_name}.
+            Profesor copil: {lesson.classroom.teacher.user.last_name} {lesson.classroom.teacher.user.first_name}
             Data și titlul lecției: {lesson.classroom.titlu} - {lesson.date_time}.
             
             Te rog să fii încurajator. Menționează pe scurt despre ce a fost lecția, extrăgând ideile principale din acest text suport:
