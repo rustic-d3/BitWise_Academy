@@ -9,6 +9,7 @@ import { getUserRole } from "../helper-functions/DecodedToken";
 import TestComponent from "../components/TestComponent";
 import { useLocation } from "react-router-dom";
 import LessonTimer from "../components/LessonTimer";
+import ConfirmModal from "../components/ConfirmModal";
 
 export default function Classroom() {
   const { lessonId } = useParams<{ lessonId: string }>();
@@ -22,6 +23,7 @@ export default function Classroom() {
   const childId = location.state?.childId ?? null;
   const [participants, setParticipants] = useState<Record<string, string>>({});
   const [lessonStartTime, setLessonStartTime] = useState<string | null>(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   async function startTest() {
     try {
@@ -40,6 +42,17 @@ export default function Classroom() {
     setTestOn(false);
     setTestCompleted(true);
   };
+  async function handleEndlessonConfirmed() {
+    try {
+      const response = await api.post(
+        `api/lessons/${lessonId}/end-and-report/`,
+      );
+      setShowConfirmModal(false);
+      console.log(response);
+    } catch (err) {
+      console.error("Ending lesson failed:", err);
+    }
+  }
 
   useEffect(() => {
     const fetchSessionPass = async () => {
@@ -116,6 +129,13 @@ export default function Classroom() {
     <div className="page-wrapper">
       <Navbar role={user_role} />
       <main className="main-content">
+        {showConfirmModal && (
+          <ConfirmModal
+            message="Esti sigur ca vrei să închizi ora? Asta va declanșa trimiterea rapoartelor către părinți"
+            onConfirm={handleEndlessonConfirmed}
+            onCancel={() => setShowConfirmModal(false)}
+          />
+        )}
         <div className="left-side-container--classroom">
           <div className="buttons-section">
             <div className="buttons-container-left">
@@ -205,6 +225,26 @@ export default function Classroom() {
         <div className="right-side-container--classroom">
           <div className="row--1">
             <div className="buttons-section">
+              {user_role === "teacher" && (
+                <button
+                  className="btn--outline"
+                  onClick={() => setShowConfirmModal(true)}
+                >
+                  <svg
+                    width="8"
+                    height="12"
+                    viewBox="0 0 8 12"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M7.96875 5.625L2.8125 11.25V9.85828L6.69703 5.625L2.8125 1.38422V0L7.96875 5.625ZM5.15625 5.625L0 11.25V0L5.15625 5.625ZM0.9375 8.83969L3.88453 5.625L0.9375 2.41031V8.83969Z"
+                      fill="#FF6116"
+                    />
+                  </svg>
+                  Încheie lecția
+                </button>
+              )}
               <button
                 className="btn--primary"
                 onClick={() => navigate("/dashboard")}
@@ -234,10 +274,7 @@ export default function Classroom() {
                 Părăsește ora
               </button>
               {lessonStartTime && (
-                <LessonTimer
-                  startTime={lessonStartTime}
-                  durationMinutes={60}
-                />
+                <LessonTimer startTime={lessonStartTime} durationMinutes={60} />
               )}
             </div>
           </div>

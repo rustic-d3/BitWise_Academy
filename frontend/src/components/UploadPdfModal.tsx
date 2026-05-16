@@ -3,10 +3,15 @@ import api from "../api";
 
 interface Props {
   lessonId: number;
+  upload_end_point: "upload-test" | "upload-material";
   onClose: () => void;
 }
 
-export default function UploadTestModal({ lessonId, onClose }: Props) {
+export default function UploadPdfModal({
+  lessonId,
+  onClose,
+  upload_end_point,
+}: Props) {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +44,7 @@ export default function UploadTestModal({ lessonId, onClose }: Props) {
 
     try {
       const response = await api.post(
-        `api/lessons/${lessonId}/upload-test/`,
+        `api/lessons/${lessonId}/${upload_end_point}/`,
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },
@@ -90,20 +95,36 @@ export default function UploadTestModal({ lessonId, onClose }: Props) {
                 />
               </svg>
             </h1>
-            <h3 className="modal-title" style={{ marginBottom: "10px" }}>
-              Test Generat cu Succes!
-            </h3>
-            <p style={{ marginBottom: "25px", color: "#ccc" }}>
-              Fișierul PDF a fost procesat, iar întrebările sunt gata pentru
-              elevi.
-            </p>
+
+            {upload_end_point === "upload-test" ? (
+              <h3 className="modal-title" style={{ marginBottom: "10px" }}>
+                Test Generat cu Succes!
+              </h3>
+            ) : (
+              <h3 className="modal-title">Material încărcat cu succes!</h3>
+            )}
+            {upload_end_point === "upload-test" ? (
+              <p style={{ marginBottom: "25px", color: "#ccc" }}>
+                Fișierul PDF a fost procesat, iar întrebările sunt gata pentru
+                elevi.
+              </p>
+            ) : (
+              <p style={{ marginBottom: "25px", color: "#ccc" }}>
+                Fișierul PDF a fost procesat, iar materialul a fost încărcat!
+              </p>
+            )}
+
             <button className="btn--primary" onClick={onClose}>
               Revino în Dashboard
             </button>
           </div>
         ) : (
           <>
-            <h3 className="modal-title">Încarcă Test</h3>
+            {upload_end_point === "upload-test" ? (
+              <h3 className="modal-title">Încarcă Test</h3>
+            ) : (
+              <h3 className="modal-title">Încarcă Material</h3>
+            )}
 
             <div
               className="upload-area"

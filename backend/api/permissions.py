@@ -2,10 +2,11 @@ from rest_framework.permissions import BasePermission
 from .models import User
 
 
-class IsAdmin(BasePermission):  
+class IsAdmin(BasePermission):
     def has_permission(self, request, view):
         return request.role == User.Role.ADMIN
-        
+
+
 class IsTeacher(BasePermission):
     message = "Only teachers can perform this action."
 

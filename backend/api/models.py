@@ -167,6 +167,7 @@ class Lesson(models.Model):
     )
     generated_test = models.JSONField(null=True, blank=True)
     is_test_active = models.BooleanField(default=False)
+    lesson_material_text = models.TextField(blank=True, null=True)
 
     class Meta:
         verbose_name = "Lesson"

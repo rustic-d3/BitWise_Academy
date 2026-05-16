@@ -3,8 +3,8 @@ import "../styles/class_session.scss";
 import type { LessonWithClassroom } from "../Types";
 import { useNavigate } from "react-router-dom";
 import ConfirmModal from "./ConfirmModal";
-import UploadTestModal from "./UploadTestModal";
 import api from "../api";
+import UploadPdfModal from "./UploadPdfModal";
 
 interface Props {
   role: "teacher" | "parent";
@@ -59,6 +59,7 @@ export default function ClassSession({
 }: Props) {
   const [showSkipConfirm, setShowSkipConfirm] = useState(false);
   const [showUploadTest, setShowUploadTest] = useState(false);
+  const [showUploadMaterial, setShowUploadMaterial] = useState(false);
   const [isSkipping, setIsSkipping] = useState(false);
 
   const navigate = useNavigate();
@@ -144,9 +145,17 @@ export default function ClassSession({
       )}
 
       {showUploadTest && (
-        <UploadTestModal
+        <UploadPdfModal
           lessonId={lesson.id}
+          upload_end_point = "upload-test"
           onClose={() => setShowUploadTest(false)}
+        />
+      )}
+      {showUploadMaterial && (
+        <UploadPdfModal
+          lessonId={lesson.id}
+          upload_end_point = "upload-material"
+          onClose={() => setShowUploadMaterial(false)}
         />
       )}
 
@@ -243,6 +252,26 @@ export default function ClassSession({
               </button>
             )}
 
+            {role === "teacher" && (
+              <button
+                className="btn--outline"
+                onClick={() => setShowUploadMaterial(true)}
+              >
+                <svg
+                  width="13"
+                  height="13"
+                  viewBox="0 0 13 13"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M12.8758 0.124178C12.7871 0.0354625 12.6638 -0.00937748 12.5386 0.00164208C12.4518 0.00931007 10.3953 0.205936 8.97791 1.62337C8.78321 1.81812 0.321662 10.2797 0.124199 10.4772C-0.0413995 10.6427 -0.0413995 10.9112 0.124199 11.0768L1.92321 12.8758C2.006 12.9586 2.11452 13 2.22304 13C2.33156 13 2.44008 12.9586 2.52286 12.8758L11.3766 4.02206C12.7941 2.60459 12.9907 0.548177 12.9983 0.461341C13.0094 0.336368 12.9645 0.212918 12.8758 0.124178ZM2.22307 11.9763L1.02371 10.777L1.62342 10.1773L2.82277 11.3766L2.22307 11.9763ZM9.87747 4.32189L8.67812 3.12254L9.2778 2.52286L10.4772 3.72222L9.87747 4.32189Z"
+                    fill="#FF6116"
+                  />
+                </svg>
+                Încarcă materialul
+              </button>
+            )}
             {role === "teacher" && (
               <button
                 className="btn--outline"

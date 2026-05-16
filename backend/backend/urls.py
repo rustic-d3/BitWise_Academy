@@ -1,7 +1,7 @@
 
 from django.contrib import admin
 from django.urls import path, include
-from api.views import  ChildProfileCreateView, ChildProfileUpdateView, ChildProfileView, ConsumeCreditView, CreateTestView, CreateUserView, GetTestQuestionsView, LessonDeleteView, LessonJoinView, LessonSkipView, MarkAttendanceView, StartTestView, SubmitTestView, TeacherProfileView,ParentProfileView, CreateClassroomView, TestStatusView, close_channel
+from api.views import  ChildProfileCreateView, ChildProfileUpdateView, ChildProfileView, ConsumeCreditView, CreateTestView, CreateUserView, EndAndReportView, GetTestQuestionsView, LessonDeleteView, LessonJoinView, LessonSkipView, LoadLessonMaterial, MarkAttendanceView, StartTestView, SubmitTestView, TeacherProfileView,ParentProfileView, CreateClassroomView, TestStatusView, close_channel
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
@@ -20,12 +20,14 @@ urlpatterns = [
     path('api/children/add/', ChildProfileCreateView.as_view(), name='child-add'),
     path("api/child/<int:id>/", ChildProfileView.as_view(), name="child_profile"),
     path('api/child/<int:id>/update/', ChildProfileUpdateView.as_view(), name='child_update'),
-    # clasrooms urls
+    # clasrooms/lessons urls
     path("api/classroom/create", CreateClassroomView.as_view(), name="create_classroom"),
     path('api/lessons/<int:id>/join/', LessonJoinView.as_view(), name='lesson_join'),
     path("api/lessons/<int:id>/skip/", LessonSkipView.as_view(), name="lesson-skip"),
     path("api/lessons/<int:lesson_id>/close-channel/", close_channel, name="close_channel"),
     path("api/lessons/<int:id>/cancel-lesson", LessonDeleteView.as_view(), name="cancel_session"),
+    path("api/lessons/<int:lesson_id>/upload-material/", LoadLessonMaterial.as_view(), name="uploading_lesson_material"),
+    path("api/lessons/<int:lesson_id>/end-and-report/", EndAndReportView.as_view(), name="ending-and-sending-report"),
     
     #Tests with AI urls 
     path("api/lessons/<int:lesson_id>/upload-test/", CreateTestView.as_view(), name="creating_tests"),
