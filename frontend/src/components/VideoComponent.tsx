@@ -7,7 +7,9 @@ import "../styles/video.scss";
 import api from "../api";
 
 AgoraRTC.setLogLevel(4);
+
 const client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+const screenClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
 
 interface Props {
   config: any;
@@ -15,6 +17,7 @@ interface Props {
   childName?: string | null;
   teacherName?: string | null;
   participants?: Record<string, string>;
+  onScreenTrackChange?: (track: any | null) => void;
 }
 
 const MicIcon = ({ active }: { active: boolean }) => (
@@ -88,22 +91,46 @@ const CameraIcon = ({ active }: { active: boolean }) => (
   </svg>
 );
 
+const ScreenShareIcon = ({ active }: { active: boolean }) => (
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="white"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+    <line x1="8" y1="21" x2="16" y2="21"></line>
+    <line x1="12" y1="17" x2="12" y2="21"></line>
+    {active && (
+      <line x1="3" y1="3" x2="21" y2="21" stroke="#FF4444" strokeWidth="2.5" />
+    )}
+  </svg>
+);
+
 export default function VideoComponent({
   config,
   lessonId,
   teacherName,
   participants,
+  onScreenTrackChange,
 }: Props) {
   const [localVideoTrack, setLocalVideoTrack] =
     useState<ICameraVideoTrack | null>(null);
   const [remoteUsers, setRemoteUsers] = useState<IAgoraRTCRemoteUser[]>([]);
-  // Aici folosim un ID specific pentru a ști EXACT peste care video facem hover
   const [hoveredUid, setHoveredUid] = useState<string | number | null>(null);
   const [cameraOn, setCameraOn] = useState(true);
   const [micOn, setMicOn] = useState(true);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [isSomeoneElseSharing, setIsSomeoneElseSharing] = useState(false);
 
   const localVideoTrackRef = useRef<ICameraVideoTrack | null>(null);
   const localAudioTrackRef = useRef<any>(null);
+  const screenTrackRef = useRef<any>(null);
+
   const localVideoRef = useRef<HTMLDivElement>(null);
   const teacherVideoRef = useRef<HTMLDivElement | null>(null);
   const teacherVideoTrackRef = useRef<any>(null);
@@ -113,13 +140,13 @@ export default function VideoComponent({
   const teacherUid = config?.teacherUid;
   const isCurrentUserTeacher = config?.uid === teacherUid;
   const teacherRemote = remoteUsers.find((u) => u.uid === teacherUid);
-  const studentRemotes = remoteUsers.filter((u) => u.uid !== teacherUid);
+  const studentRemotes = remoteUsers.filter(
+    (u) => u.uid !== teacherUid && Number(u.uid) < 100000,
+  );
 
   const getParticipantName = (uid: string | number) => {
     if (uid === teacherUid) return teacherName || "Profesor";
-
     const name = participants?.[String(uid)];
-
     return name ? name : `Elev ${uid}`;
   };
 
@@ -135,7 +162,7 @@ export default function VideoComponent({
         console.error("Could not close channel:", err);
       });
     }
-  }, [remoteUsers]);
+  }, [remoteUsers, localVideoTrack, lessonId]);
 
   useEffect(() => {
     let isActive = true;
@@ -143,12 +170,27 @@ export default function VideoComponent({
     const setupCall = async () => {
       try {
         client.on("user-published", async (user, mediaType) => {
+          // Daca UID-ul este chiar ecranul userului curent (UID-ul local + 100.000)
+          // se va ignora complet ca sa nu se vada ecranul dublu jos în lista
+          const myScreenUid = Number(config.uid) + 100000;
+          if (user.uid === myScreenUid) return;
+
           try {
             await client.subscribe(user, mediaType);
           } catch {
             return;
           }
 
+          // regula pentru ecranele celorlalți (Orice UID >= 100.000)
+          if (Number(user.uid) >= 100000) {
+            setIsSomeoneElseSharing(true);
+            if (mediaType === "video" && onScreenTrackChange) {
+              onScreenTrackChange(user.videoTrack);
+            }
+            return;
+          }
+
+          // Funcționalitatea normala pentru camerele web
           if (mediaType === "video") {
             videoTracksRef.current[user.uid] = user.videoTrack;
             if (user.uid === teacherUid) {
@@ -158,17 +200,26 @@ export default function VideoComponent({
               prev.find((u) => u.uid === user.uid) ? prev : [...prev, user],
             );
           }
-
           if (mediaType === "audio") {
             user.audioTrack?.play();
           }
         });
 
         client.on("user-unpublished", (user) => {
+          if (Number(user.uid) >= 100000 && onScreenTrackChange) {
+            setIsSomeoneElseSharing(false);
+            onScreenTrackChange(null);
+            return;
+          }
           setRemoteUsers((prev) => prev.filter((u) => u.uid !== user.uid));
         });
 
         client.on("user-left", (user) => {
+          if (Number(user.uid) >= 100000 && onScreenTrackChange) {
+            setIsSomeoneElseSharing(false);
+            onScreenTrackChange(null);
+            return;
+          }
           delete videoTracksRef.current[user.uid];
           if (user.uid === teacherUid) {
             teacherVideoTrackRef.current = null;
@@ -197,6 +248,7 @@ export default function VideoComponent({
         localVideoTrackRef.current = videoTrack;
         localAudioTrackRef.current = audioTrack;
         setLocalVideoTrack(videoTrack);
+
         await client.publish([audioTrack, videoTrack]);
       } catch (err) {
         console.error("Error during setup:", err);
@@ -209,8 +261,14 @@ export default function VideoComponent({
       isActive = false;
       localVideoTrackRef.current?.close();
       localAudioTrackRef.current?.close();
+
+      if (screenTrackRef.current) {
+        screenTrackRef.current.close();
+      }
+
       client.removeAllListeners();
       client.leave();
+      screenClient.leave();
     };
   }, [config]);
 
@@ -226,9 +284,55 @@ export default function VideoComponent({
     setMicOn((prev) => !prev);
   };
 
+  const toggleScreenShare = async () => {
+    if (isScreenSharing) {
+      if (screenTrackRef.current) {
+        screenTrackRef.current.close();
+        await screenClient.unpublish(screenTrackRef.current);
+      }
+      await screenClient.leave();
+      setIsScreenSharing(false);
+      screenTrackRef.current = null;
+      if (onScreenTrackChange) onScreenTrackChange(null);
+    } else {
+      try {
+        const screenResult = await AgoraRTC.createScreenVideoTrack({
+          encoderConfig: "1080p_1",
+        });
+
+        const screenVideoTrack = Array.isArray(screenResult)
+          ? screenResult[0]
+          : screenResult;
+
+        screenTrackRef.current = screenVideoTrack;
+
+        const screenUid = Number(config.uid) + 100000;
+        await screenClient.join(
+          config.appId,
+          config.channel,
+          config.token,
+          screenUid,
+        );
+
+        await screenClient.publish(screenResult);
+
+        setIsScreenSharing(true);
+        if (onScreenTrackChange) onScreenTrackChange(screenVideoTrack);
+
+        screenVideoTrack.on("track-ended", async () => {
+          await screenClient.leave();
+          setIsScreenSharing(false);
+          screenTrackRef.current = null;
+          if (onScreenTrackChange) onScreenTrackChange(null);
+        });
+      } catch (error) {
+        console.error("Failed to share screen", error);
+      }
+    }
+  };
+
   return (
     <div className="main-container--video">
-      {/* ======================= TEACHER VIDEO ======================= */}
       <div
         className="teacher-video-container video-hover-wrapper"
         onMouseEnter={() => setHoveredUid(teacherUid)}
@@ -257,7 +361,6 @@ export default function VideoComponent({
           </>
         )}
 
-        {/* Eticheta cu numele profesorului */}
         {hoveredUid === teacherUid && (
           <div className="video-name-tag">
             {isCurrentUserTeacher
@@ -266,9 +369,8 @@ export default function VideoComponent({
           </div>
         )}
       </div>
-      {/* Video copiilor */}
+
       <div className="children-video-container">
-        {/* STUDENT LOCAL (Dacă utilizatorul curent este un elev) */}
         {!isCurrentUserTeacher && (
           <div
             className="child-video video-hover-wrapper"
@@ -280,13 +382,12 @@ export default function VideoComponent({
             </div>
             {hoveredUid === config.uid && (
               <div className="video-name-tag">
-                {getParticipantName(config.uid)}
+                {getParticipantName(config.uid)} (Tu)
               </div>
             )}
           </div>
         )}
 
-        {/* STUDENTS REMOTE (Ceilalți elevi din apel) */}
         {studentRemotes.map((user: IAgoraRTCRemoteUser) => (
           <div
             key={user.uid}
@@ -303,7 +404,6 @@ export default function VideoComponent({
                 }
               }}
             />
-            {/* Afișăm ID-ul lor. Dacă vrei numele real, trebuie extras din backend */}
             {hoveredUid === user.uid && (
               <div className="video-name-tag">
                 {getParticipantName(user.uid)}
@@ -313,7 +413,6 @@ export default function VideoComponent({
         ))}
       </div>
 
-      {/* ======================= CONTROLS ======================= */}
       <div className="video-controls">
         <button
           className={`control-btn ${!micOn ? "control-btn--off" : ""}`}
@@ -328,6 +427,22 @@ export default function VideoComponent({
           title={cameraOn ? "Dezactivează camera" : "Activează camera"}
         >
           <CameraIcon active={cameraOn} />
+        </button>
+
+        <button
+          className={`control-btn ${isScreenSharing ? "control-btn--off" : ""}`}
+          onClick={toggleScreenShare}
+          title={isScreenSharing ? "Oprește partajarea" : "Partajează ecranul"}
+          disabled={!isScreenSharing && isSomeoneElseSharing} // <--- BLOCĂM BUTONUL
+          style={{
+            opacity: !isScreenSharing && isSomeoneElseSharing ? 0.5 : 1,
+            cursor:
+              !isScreenSharing && isSomeoneElseSharing
+                ? "not-allowed"
+                : "pointer",
+          }}
+        >
+          <ScreenShareIcon active={!isScreenSharing} />
         </button>
       </div>
     </div>

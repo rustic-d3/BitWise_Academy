@@ -147,7 +147,7 @@ class LessonJoinSerializer(serializers.ModelSerializer):
             obj.channel_name = channel_name
             obj.save()
         video_token = RtcTokenBuilder.buildTokenWithUid(
-            app_id, app_certificate, channel_name, uid, role, privilege_expired_ts
+            app_id, app_certificate, channel_name, 0, role, privilege_expired_ts
         )
         whiteboard_sdk_token = os.getenv("AGORA_WHITEBOARD_SDK_TOKEN") 
         whiteboard_region = "eu" 

@@ -10,6 +10,7 @@ import TestComponent from "../components/TestComponent";
 import { useLocation } from "react-router-dom";
 import LessonTimer from "../components/LessonTimer";
 import ConfirmModal from "../components/ConfirmModal";
+import ScreenPlayer from "../components/ScreenPlayer";
 
 export default function Classroom() {
   const { lessonId } = useParams<{ lessonId: string }>();
@@ -24,6 +25,7 @@ export default function Classroom() {
   const [participants, setParticipants] = useState<Record<string, string>>({});
   const [lessonStartTime, setLessonStartTime] = useState<string | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [activeScreenTrack, setActiveScreenTrack] = useState<any>(null);
 
   async function startTest() {
     try {
@@ -125,6 +127,7 @@ export default function Classroom() {
 
     return () => clearInterval(interval);
   }, [lessonId, user_role, testOn]);
+
   return (
     <div className="page-wrapper">
       <Navbar role={user_role} />
@@ -219,6 +222,7 @@ export default function Classroom() {
             lessonId={lessonId}
             childName={childName}
             teacherName={agoraConfig?.teacherName ?? null}
+            onScreenTrackChange={(track) => setActiveScreenTrack(track)}
             participants={participants}
           />
         </div>
@@ -279,24 +283,23 @@ export default function Classroom() {
             </div>
           </div>
           <div className="row--2">
-            {/* 
-              Verificăm dacă `agoraConfig` există ȘI dacă are secțiunea de `whiteboard`
-              Dacă da, transmitem props-urile către WhiteBoard. Dacă nu, afișăm un text de loading.
-            */}
-            {agoraConfig && agoraConfig.whiteboard && !testOn ? (
+            {testOn ? (
+              <TestComponent
+                lessonId={lessonId ? Number(lessonId) : undefined}
+                userRole={user_role}
+                childId={childId}
+                closeTest={endTest}
+              />
+            ) : activeScreenTrack ? (
+              // DACĂ AVEM ECRAN, ÎL AFIȘĂM PESTE TABLĂ
+              <ScreenPlayer track={activeScreenTrack} />
+            ) : agoraConfig && agoraConfig.whiteboard ? (
               <WhiteBoard
                 uuid={agoraConfig.whiteboard.uuid}
                 token={agoraConfig.whiteboard.token}
                 appIdentifier={agoraConfig.whiteboard.appIdentifier}
                 region={agoraConfig.whiteboard.region}
                 uid={agoraConfig.uid.toString()}
-              />
-            ) : testOn ? (
-              <TestComponent
-                lessonId={lessonId ? Number(lessonId) : undefined}
-                userRole={user_role}
-                childId={childId}
-                closeTest={endTest}
               />
             ) : (
               <div
