@@ -7,7 +7,8 @@ from api.models import ChildProfile, Classroom, Lesson, User, TeacherProfile, Pa
 from rest_framework import serializers
 from django.core.validators import RegexValidator
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from agora_token_builder import RtcTokenBuilder
+from agora_token_builder import RtcTokenBuilder, RtmTokenBuilder
+
 import os
 
 
@@ -149,6 +150,13 @@ class LessonJoinSerializer(serializers.ModelSerializer):
         video_token = RtcTokenBuilder.buildTokenWithUid(
             app_id, app_certificate, channel_name, 0, role, privilege_expired_ts
         )
+        rtm_token = RtmTokenBuilder.buildToken(
+            app_id, 
+            app_certificate, 
+            str(uid), 
+            1,        
+            privilege_expired_ts
+        )
         whiteboard_sdk_token = os.getenv("AGORA_WHITEBOARD_SDK_TOKEN") 
         whiteboard_region = "eu" 
 
@@ -187,6 +195,7 @@ class LessonJoinSerializer(serializers.ModelSerializer):
                 
         return {
             "token": video_token,
+            "rtm_token": rtm_token,
             "uid": uid,
             "appId": app_id,
             "channel": channel_name,

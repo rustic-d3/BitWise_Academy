@@ -11,6 +11,7 @@ import { useLocation } from "react-router-dom";
 import LessonTimer from "../components/LessonTimer";
 import ConfirmModal from "../components/ConfirmModal";
 import ScreenPlayer from "../components/ScreenPlayer";
+import ChatComponent from "../components/ChatComponent";
 
 export default function Classroom() {
   const { lessonId } = useParams<{ lessonId: string }>();
@@ -26,6 +27,8 @@ export default function Classroom() {
   const [lessonStartTime, setLessonStartTime] = useState<string | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [activeScreenTrack, setActiveScreenTrack] = useState<any>(null);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatMessages, setChatMessages] = useState<any[]>([]);
 
   async function startTest() {
     try {
@@ -142,7 +145,10 @@ export default function Classroom() {
         <div className="left-side-container--classroom">
           <div className="buttons-section">
             <div className="buttons-container-left">
-              <button className="btn--primary">
+              <button
+                className="btn--primary"
+                onClick={() => setChatOpen(false)}
+              >
                 <svg
                   width="20"
                   height="20"
@@ -159,7 +165,10 @@ export default function Classroom() {
                   />
                 </svg>
               </button>
-              <button className="btn--users--chat">
+              <button
+                className="btn--users--chat"
+                onClick={() => setChatOpen(true)}
+              >
                 <svg
                   width="20"
                   height="20"
@@ -217,14 +226,23 @@ export default function Classroom() {
             </div>
           </div>
           {/* Chat/Video */}
-          <VideoComponent
-            config={agoraConfig}
-            lessonId={lessonId}
-            childName={childName}
-            teacherName={agoraConfig?.teacherName ?? null}
-            onScreenTrackChange={(track) => setActiveScreenTrack(track)}
-            participants={participants}
-          />
+          {chatOpen ? (
+            <ChatComponent
+              currentUser={user_role === "teacher" ? "Profesor" : childName}
+              config={agoraConfig}
+              messages={chatMessages} // Îi dăm memoria
+              setMessages={setChatMessages}
+            />
+          ) : (
+            <VideoComponent
+              config={agoraConfig}
+              lessonId={lessonId}
+              childName={childName}
+              teacherName={agoraConfig?.teacherName ?? null}
+              onScreenTrackChange={(track) => setActiveScreenTrack(track)}
+              participants={participants}
+            />
+          )}
         </div>
         <div className="right-side-container--classroom">
           <div className="row--1">
