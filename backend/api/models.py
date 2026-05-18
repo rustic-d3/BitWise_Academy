@@ -193,6 +193,26 @@ class Lesson(models.Model):
     def __str__(self):
         return f"Lesson {self.id} - {self.date_time}"
 
+class TeacherAvailability(models.Model):
+    teacher = models.ForeignKey(
+        'TeacherProfile', 
+        on_delete=models.CASCADE, 
+        related_name="availabilities"
+    )
+    day = models.CharField(
+        max_length=3,
+        choices=ScheduleDay.choices, 
+    )
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+
+    class Meta:
+        verbose_name = "Teacher Availability"
+        verbose_name_plural = "Teacher Availabilities"
+
+    def __str__(self):
+        return f"{self.teacher.user.first_name} {self.teacher.user.last_name} - {self.day} ({self.start_time} - {self.end_time})"
+
 
 class TestResult(models.Model):
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='test_results')

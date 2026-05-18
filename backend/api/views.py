@@ -410,6 +410,99 @@ class SubmitTestView(APIView):
             return Response({"error": "Lecția nu a fost găsită."}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+from rest_framework import status
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from datetime import datetime
+from .models import Classroom, TeacherAvailability
+
+class TeacherScheduleView(APIView):
+    permission_classes = [IsAuthenticated, IsTeacher]
+
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        
+        
+        teacher_profile = user.teacher_profile
+        new_schedule = request.data.get('schedule', [])
+
+        day_mapping = {
+            "Luni": "Mon", "Marți": "Tue", "Miercuri": "Wed", 
+            "Joi": "Thu", "Vineri": "Fri", "Sâmbătă": "Sat", "Duminică": "Sun"
+        }
+
+        parsed_availabilities = []
+
+        for row in new_schedule:
+            day_ro = row.get('day')
+            start_time_str = row.get('startTime')
+            end_time_str = row.get('endTime')
+
+            if not day_ro or not start_time_str or not end_time_str:
+                continue 
+
+            db_day = day_mapping.get(day_ro)
+            if not db_day:
+                return Response({"error": f"Zi invalidă trimisă din frontend: {day_ro}"}, status=status.HTTP_400_BAD_REQUEST)
+
+            try:
+                 start_time = datetime.strptime(start_time_str, '%H:%M').time()
+                 end_time = datetime.strptime(end_time_str, '%H:%M').time()
+            except ValueError:
+                 return Response({"error": "Formatul orei este invalid."}, status=status.HTTP_400_BAD_REQUEST)
+            
+            if start_time >= end_time:
+                return Response({"error": f"Ora de început trebuie să fie înaintea orei de sfârșit pentru ziua de {day_ro}."}, status=status.HTTP_400_BAD_REQUEST)
+
+            parsed_availabilities.append({
+                'day': db_day,
+                'day_ro': day_ro,
+                'start_time': start_time,
+                'end_time': end_time
+            })
+
+        existing_classrooms = Classroom.objects.filter(
+            teacher=teacher_profile,
+            is_canceled=False
+        )
+
+        for avail in parsed_availabilities:
+            a_day = avail['day']
+            a_start = avail['start_time']
+            a_end = avail['end_time']
+
+            for classroom in existing_classrooms:
+                if classroom.schedule_day == a_day:
+                    c_start = classroom.schedule_time
+                    
+                    
+                    if a_start <= c_start < a_end:
+                        zi_ro = avail['day_ro']
+                        return Response({
+                            "error": f"Atenție: Nu poți seta recuperări {zi_ro} între {a_start.strftime('%H:%M')} și {a_end.strftime('%H:%M')}, deoarece ai deja o grupă normală programată la ora {c_start.strftime('%H:%M')}!"
+                        }, status=status.HTTP_409_CONFLICT)
+
+        
+        TeacherAvailability.objects.filter(teacher=teacher_profile).delete()
+
+        
+        availabilities_to_create = [
+            TeacherAvailability(
+                teacher=teacher_profile,
+                day=item['day'],
+                start_time=item['start_time'],
+                end_time=item['end_time']
+            ) for item in parsed_availabilities
+        ]
+        
+        TeacherAvailability.objects.bulk_create(availabilities_to_create)
+
+        return Response(
+            {"message": "Programul a fost salvat cu succes!"}, 
+            status=status.HTTP_200_OK
+        )
         
  
 def trimite_raport_async(lesson, child, parent_email, ai_test):
@@ -430,7 +523,7 @@ def trimite_raport_async(lesson, child, parent_email, ai_test):
                         "raspunsul_lui": answer
                     })
 
-        # Generăm analiza cu Gemini
+        # Generarea analizei cu Gemini
         client = genai.Client()
         if test_result and ai_test:
             prompt = f"""

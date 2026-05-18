@@ -22,11 +22,6 @@ export default function Navbar({ role }: RoleProps) {
           <a href="#">Recuperare</a>
         </li>
       )}
-      {isParent && hasChildren && (
-        <li>
-          <a href="#">Feedback-ul meu</a>
-        </li>
-      )}
       {isParent && (
         <li>
           <a href="/subscriptions">Oferte</a>
@@ -34,12 +29,7 @@ export default function Navbar({ role }: RoleProps) {
       )}
       {!isParent && (
         <li>
-          <a href="#">Disponibilitate</a>
-        </li>
-      )}
-      {!isParent && (
-        <li>
-          <a href="#">Feedback</a>
+          <a href="/set-schedule">Disponibilitate</a>
         </li>
       )}
     </>

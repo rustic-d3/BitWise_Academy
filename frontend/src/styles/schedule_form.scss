@@ -1,0 +1,139 @@
+@use "global" as g;
+@use "variables" as v;
+
+.schedule-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: v.$spacing-xl;
+  background-color: g.$white;
+  border: 2px solid rgba(#000000, 0.25);
+}
+
+.schedule-form {
+  display: flex;
+  flex-direction: column;
+  gap: v.$spacing-xl;
+  max-width: 550px;
+  width: 100%;
+}
+
+.schedule-list {
+  display: flex;
+  flex-direction: column;
+  gap: v.$spacing-md;
+}
+
+.schedule-row {
+  display: flex;
+  align-items: center;
+  gap: v.$spacing-sm;
+  flex-wrap: wrap;
+}
+
+.day-square {
+  width: 100px;
+  height: 42px;
+  background: g.$primary-gradient;
+  padding: 1em;
+  border-radius: 3px;
+  color: g.$white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: g.$font-sansation;
+  font-size: 1.2rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.time-group {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: v.$spacing-sm;
+  flex: 1;
+}
+
+.time-input {
+  width: 120px;
+  height: 42px;
+  border: 1px solid g.$text-dark;
+  border-radius: v.$border-radius-sm;
+  padding: 0 8px;
+  font-family: g.$font-sansation;
+  font-size: v.$font-size-input;
+  text-align: center;
+  outline: none;
+  background: transparent;
+
+  &:focus {
+    border-color: g.$primary-orange;
+  }
+}
+
+.time-separator {
+  color: g.$text-dark;
+  font-weight: 300;
+}
+
+.action-icons {
+  display: flex;
+  align-items: center;
+  gap: v.$spacing-xs;
+  margin-left: auto;
+
+  .icon-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: g.$text-dark;
+    padding: 0;
+    transition: transform 0.1s ease;
+
+    &:hover {
+      transform: scale(1.1);
+    }
+  }
+}
+
+.schedule-actions {
+  display: flex;
+  justify-content: center;
+  gap: v.$spacing-xl;
+  margin-top: v.$spacing-sm;
+
+  .btn--primary,
+  .btn--outline {
+    padding: 0.6rem 1.5rem;
+    font-size: 1.1rem;
+    font-weight: 500;
+    border-radius: v.$border-radius-sm;
+  }
+}
+
+@media (max-width: 550px) {
+  .schedule-row {
+    gap: 12px;
+  }
+
+  .day-square {
+    flex: 1;
+  }
+
+  .time-group {
+    width: 100%;
+    order: 3;
+    justify-content: space-between;
+  }
+
+  .time-input {
+    width: 45%;
+  }
+}

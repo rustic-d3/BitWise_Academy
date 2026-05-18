@@ -1,0 +1,81 @@
+@use "global" as g;
+@use "variables" as v;
+
+.main-container-schedule {
+  display: flex;
+  padding: 2% 5%;
+  width: 100%;
+  gap: 2em;
+  flex-direction: column;
+  border: 2px solid rgba(0, 0, 0, 0.25);
+  background: g.$white;
+
+  .row-1 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1em;
+
+    .title-container {
+      display: flex;
+      gap: 1em;
+      justify-content: center;
+      align-items: center;
+
+      h1 {
+        @media (max-width: 480px) {
+          font-size: 1.5rem;
+        }
+      }
+    }
+  }
+
+  .row-2 {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 2em;
+
+    .col-1 {
+      width: fit-content;
+      height: 100%;
+      display: flex;
+      align-items: flex-start;
+      max-width: 350px;
+      padding: 2em 0;
+    }
+
+    .col-2 {
+      flex: 1;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    // Mobile/Tablet Layout Stacking
+    @media (max-width: 900px) {
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2em 0;
+
+      .col-1 {
+        width: 100%;
+        max-width: 100%;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .col-2 {
+        width: 100%;
+        justify-content: center;
+        display: flex;
+      }
+    }
+  }
+
+  @media (max-width: 600px) {
+    padding: 1.5rem 1rem;
+    gap: 1.5em;
+  }
+}
