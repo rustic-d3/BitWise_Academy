@@ -16,6 +16,7 @@ import SubscriptionsPage from "./pages/SubscriptionsPage";
 import AddChildPage from "./pages/AddChildPage";
 import TeacherProtectedRoute from "./components/TeacherProtectedRoute";
 import SetSchedulePage from "./pages/SetSchedulePage";
+import SetRecoveryPage from "./pages/SetRecoveryPage";
 
 function LogOutAndRegister() {
   localStorage.clear();
@@ -87,6 +88,16 @@ function App() {
               <ProtectedRoute>
                 <ParentProtectedRoute>
                   <AddChildPage />
+                </ParentProtectedRoute>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/set-recovery"
+            element={
+              <ProtectedRoute>
+                <ParentProtectedRoute>
+                  <SetRecoveryPage />
                 </ParentProtectedRoute>
               </ProtectedRoute>
             }

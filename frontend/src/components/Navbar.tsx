@@ -15,11 +15,10 @@ export default function Navbar({ role }: RoleProps) {
     <>
       <li>
         <a href="/dashboard">Dashboard</a>{" "}
-        {/* De schimbat aici mai tarziu la toate*/}
       </li>
       {isParent && hasChildren && (
         <li>
-          <a href="#">Recuperare</a>
+          <a href="/set-recovery">Recuperare</a>
         </li>
       )}
       {isParent && (
@@ -48,9 +47,6 @@ export default function Navbar({ role }: RoleProps) {
             </nav>
           </div>
           <div className="right-side">
-            <div className="mail-icon">
-              <img src="/mail_icon.png" alt="mail" />
-            </div>
             <button className="btn--outline" onClick={() => handleLogout()}>
               Delogare
             </button>

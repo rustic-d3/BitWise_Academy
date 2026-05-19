@@ -10,6 +10,8 @@ export interface Lesson {
   date_time: string;
   is_canceled: boolean;
   skipped_by: number[];
+  is_makeup?: boolean;
+  makeup_students?: number[];
 }
 
 export interface Classroom {

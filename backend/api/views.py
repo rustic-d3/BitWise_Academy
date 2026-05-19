@@ -7,6 +7,7 @@ from django.shortcuts import get_object_or_404
 from google import genai
 from django.core.mail import send_mail
 import threading
+from django.utils.timezone import make_aware
 
 from .permissions import IsAdmin, IsParent, IsTeacher
 from .models import ChildProfile, Lesson, TestResult, User
@@ -18,6 +19,12 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.parsers import MultiPartParser, FormParser, settings
+from rest_framework import status
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from datetime import datetime
+from .models import Classroom, TeacherAvailability
 
 from .serializers import (
     ChildProfileSerializer,
@@ -238,6 +245,38 @@ class ConsumeCreditView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=500)
 
+class ScheduleMakeupLessonView(APIView):
+    def post(self, request):
+        child_id = request.data.get('child_id')
+        date_str = request.data.get('date') # Format așteptat: 'YYYY-MM-DD'
+        time_str = request.data.get('time') # Format așteptat: '19:00'
+
+        try:
+            child = ChildProfile.objects.get(id=child_id)
+            teacher = child.classroom.teacher
+            if not child.classroom:
+                return Response(
+                    {"error": "Acest copil nu are încă o clasă atribuită. Nu poți programa o recuperare."}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            datetime_str = f"{date_str} {time_str}"
+            naive_datetime = datetime.strptime(datetime_str, '%Y-%m-%d %H:%M')
+            aware_datetime = make_aware(naive_datetime)
+
+            makeup_lesson, created = Lesson.objects.get_or_create(
+                classroom=child.classroom, 
+                date_time=aware_datetime,
+                is_makeup=True
+            )
+            
+            makeup_lesson.makeup_students.add(child)
+
+            return Response({"message": "Recuperarea a fost programată!"}, status=status.HTTP_201_CREATED)
+
+        except ChildProfile.DoesNotExist:
+            return Response({"error": "Copilul nu a fost găsit."}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 #Tests views  
 
 class CreateTestView(APIView):
@@ -312,8 +351,7 @@ class StartTestView(APIView):
     def post(self, request, lesson_id):
         try:
             lesson = Lesson.objects.get(id=lesson_id)
-            lesson.is_test_active = True
-            lesson.save()
+            
             
             if not lesson.generated_test:
                 return Response(
@@ -326,7 +364,8 @@ class StartTestView(APIView):
                     {"error": "Nu se poate începe testul. Niciun elev nu este prezent la oră!"}, 
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            
+            lesson.is_test_active = True
+            lesson.save()
             return Response({"message": "Testul a început!"}, status=status.HTTP_200_OK)
         except Lesson.DoesNotExist:
             return Response({"error": "Lecția nu a fost găsită."}, status=status.HTTP_404_NOT_FOUND)
@@ -411,12 +450,7 @@ class SubmitTestView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-from rest_framework import status
-from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from datetime import datetime
-from .models import Classroom, TeacherAvailability
+
 
 class TeacherScheduleView(APIView):
     permission_classes = [IsAuthenticated, IsTeacher]

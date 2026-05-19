@@ -53,16 +53,23 @@ export default function ParentDashboard() {
             setActiveChildClassroom(classroom);
             setActiveChildTeacher(classroom.teacher);
 
-            const lessons: LessonWithClassroom[] = classroom.lessons
-              .map((lesson: any) => ({
-                ...lesson,
-                classroom: classroom,
-              }))
-              .sort(
-                (a: any, b: any) =>
-                  new Date(a.date_time).getTime() -
-                  new Date(b.date_time).getTime(),
-              );
+            const lessons: LessonWithClassroom[] = classroom.lessons.map(
+              (lesson: any) => {
+                const displayedStudents = lesson.is_makeup
+                  ? classroom.students.filter((student: any) =>
+                      lesson.makeup_students?.includes(student.id),
+                    )
+                  : classroom.students;
+
+                return {
+                  ...lesson,
+                  classroom: {
+                    ...classroom,
+                    students: displayedStudents,
+                  },
+                };
+              },
+            );
 
             setAllLessons(lessons);
           }

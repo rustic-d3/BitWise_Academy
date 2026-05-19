@@ -32,7 +32,8 @@ export default function Classroom() {
 
   async function startTest() {
     try {
-      await api.post(`/api/lessons/${lessonId}/start-test/`);
+      const response = await api.post(`/api/lessons/${lessonId}/start-test/`);
+      console.log(response);
       setTestOn(true);
     } catch (err: any) {
       if (err.response && err.response.data && err.response.data.error) {

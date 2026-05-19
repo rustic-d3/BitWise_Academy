@@ -1,0 +1,178 @@
+@use "global" as g;
+@use "variables" as v;
+
+$gradient-color: linear-gradient(135deg, #ff416c, #ff4b2b);
+$text-gradient: linear-gradient(135deg, #ff416c, #ff4b2b);
+$orange-text: #ff5722;
+$border-color: #ff5722;
+
+.calendar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: fit-content;
+  font-family: g.$font-sansation;
+  background-color: white;
+
+  .calendar-box {
+    border: 1px solid $border-color;
+    border-radius: 8px;
+    padding: 20px 16px; // ← padding lateral redus față de 20px ca să încapă gridul
+    width: 340px; // ← mărit de la 320px
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+
+      .month-year-title {
+        color: $orange-text;
+        font-weight: 600;
+        font-size: 1.1rem;
+        font-family: g.$font-sansation;
+      }
+
+      .nav-arrows {
+        button {
+          background: none;
+          border: none;
+          color: $orange-text;
+          font-size: 1.2rem;
+          cursor: pointer;
+          margin-left: 10px;
+          font-family: g.$font-sansation;
+
+          &:hover {
+            opacity: 0.7;
+          }
+        }
+      }
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px; // ← redus de la 10px; 7*35 + 6*10 = 305 > 308 inner width
+      text-align: center;
+
+      .weekday-label {
+        color: $orange-text;
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-bottom: 6px;
+        font-family: g.$font-sansation;
+      }
+
+      .day-cell {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 36px;
+        width: 36px;
+        margin: 0 auto;
+        color: $orange-text;
+        font-weight: 500;
+        cursor: pointer;
+        border-radius: 50%;
+        transition: all 0.2s ease;
+        font-family: g.$font-sansation;
+        font-size: 0.9rem;
+        &.disabled {
+          color: #e0e0e0 !important;
+          background-color: transparent !important;
+          cursor: not-allowed;
+          pointer-events: none;
+
+          .day-number {
+            opacity: 0.4;
+          }
+        }
+        &.faded {
+          opacity: 0.4;
+        }
+
+        &:hover:not(.selected) {
+          background-color: rgba(255, 87, 34, 0.1);
+        }
+
+        &.selected {
+          background: $gradient-color;
+          color: white;
+          box-shadow: 0 4px 8px rgba(255, 75, 43, 0.4);
+        }
+      }
+    }
+  }
+
+  .time-selector {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 340px; // ← sincronizat cu calendar-box
+    margin-top: 25px;
+    margin-bottom: 25px;
+
+    .time-item {
+      font-weight: 600;
+      color: #333;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-family: g.$font-sansation;
+
+      &.selected {
+        background: $text-gradient;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      &:hover:not(.selected) {
+        color: $orange-text;
+      }
+    }
+  }
+
+  .calendar-actions {
+    display: flex;
+    gap: 20px;
+
+    button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 20px;
+      font-size: 1rem;
+      font-weight: 500;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      font-family: g.$font-sansation;
+
+      &:hover {
+        opacity: 0.9;
+      }
+    }
+
+    .btn-save {
+      background: $gradient-color;
+      color: white;
+      border: none;
+      box-shadow: 0 4px 10px rgba(255, 75, 43, 0.3);
+    }
+
+    .btn-cancel {
+      background: white;
+      color: $orange-text;
+      border: 1px solid $orange-text;
+    }
+  }
+
+  .time-disabled {
+    color: #000000 !important;
+    cursor: not-allowed;
+    pointer-events: none;
+    opacity: 0.4;
+  }
+}

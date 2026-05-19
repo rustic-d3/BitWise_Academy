@@ -70,6 +70,10 @@ export default function ClassSession({
     month: "short",
     year: "numeric",
   });
+  const time = new Date(lesson.date_time).toLocaleTimeString("ro-RO", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
   const lessonDate = new Date(lesson.date_time);
   const today = new Date();
   const isToday =
@@ -95,7 +99,7 @@ export default function ClassSession({
       navigate(`/classroom/${lesson.id}`);
       return;
     }
-    const student = lesson.classroom.students.find((s) => s.id === childId);
+    const student = lesson?.classroom?.students?.find((s) => s.id === childId);
     const childName = student?.full_name;
 
     try {
@@ -147,14 +151,14 @@ export default function ClassSession({
       {showUploadTest && (
         <UploadPdfModal
           lessonId={lesson.id}
-          upload_end_point = "upload-test"
+          upload_end_point="upload-test"
           onClose={() => setShowUploadTest(false)}
         />
       )}
       {showUploadMaterial && (
         <UploadPdfModal
           lessonId={lesson.id}
-          upload_end_point = "upload-material"
+          upload_end_point="upload-material"
           onClose={() => setShowUploadMaterial(false)}
         />
       )}
@@ -162,7 +166,10 @@ export default function ClassSession({
       <div className="session-container">
         <div className="row-1">
           <div className="col-1">
-            <p>{date}</p>
+            <p>
+              {date} | {time}
+            </p>
+
             <div className="title-container">
               <svg
                 width="14"
@@ -184,12 +191,19 @@ export default function ClassSession({
                   fill="black"
                 />
               </svg>
-              <h1 className="title-text">{lesson.classroom.titlu}</h1>
+              <h1 className="title-text">
+                {lesson?.classroom?.titlu || "Clasă ștearsă"}
+              </h1>
             </div>
-            <p>{lesson.classroom.classroom_type}</p>
+
+            {lesson?.is_makeup ? (
+              <p>Lecție de recuperare - {lesson?.classroom?.classroom_type}</p>
+            ) : (
+              <p>Lecție de grup - {lesson?.classroom?.classroom_type}</p>
+            )}
           </div>
           <div className="col-2">
-            {lesson.classroom.students.map((student) => {
+            {lesson?.classroom?.students?.map((student) => {
               // Verificăm dacă ID-ul acestui student se află în lista celor care au dat skip
               const hasSkipped = lesson.skipped_by?.includes(student.id);
 

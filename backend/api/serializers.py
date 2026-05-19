@@ -1,9 +1,10 @@
 from datetime import timedelta
 import time
+from django.db.models import Q
 
 from django.utils import timezone
 import requests
-from api.models import ChildProfile, Classroom, Lesson, User, TeacherProfile, ParentProfile
+from api.models import ChildProfile, Classroom, Lesson, TeacherAvailability, User, TeacherProfile, ParentProfile
 from rest_framework import serializers
 from django.core.validators import RegexValidator
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -11,6 +12,10 @@ from agora_token_builder import RtcTokenBuilder, RtmTokenBuilder
 
 import os
 
+class TeacherAvailabilitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TeacherAvailability
+        fields = ['day', 'start_time', 'end_time']
 
 class UserSerializer(serializers.ModelSerializer):    
   
@@ -217,13 +222,30 @@ class ChildProfileBasicSerializer(serializers.ModelSerializer):
 class TeacherProfileBasicSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(source="user.first_name", read_only=True)
     last_name = serializers.CharField(source="user.last_name", read_only=True)
+    availabilities = TeacherAvailabilitySerializer(many=True, read_only=True)
+    booked_slots = serializers.SerializerMethodField()
 
     class Meta:
         model = TeacherProfile
-        fields = ["first_name", "last_name", "description", "teaching_module"]
-
+        fields = ["first_name", "last_name", "description", "teaching_module", "availabilities", "booked_slots"]
+    def get_booked_slots(self, obj):
+        from django.utils import timezone
+        now = timezone.now()
+        
+        future_lessons = Lesson.objects.filter(
+            classroom__teacher=obj, 
+            is_canceled=False, 
+            date_time__gte=now
+        )
+        
+        slots = []
+        for lesson in future_lessons:
+            local_date = timezone.localtime(lesson.date_time)
+            slots.append(local_date.strftime('%Y-%m-%d %H:%M'))
+            
+        return slots
+        
 class ClassroomBasicSerializer(serializers.ModelSerializer):
-    # Schimbăm de la LessonSerializer la SerializerMethodField
     lessons = serializers.SerializerMethodField()
     students = ChildProfileBasicSerializer(many=True, read_only=True)
     teacher = TeacherProfileBasicSerializer(read_only=True)
@@ -242,54 +264,60 @@ class ClassroomBasicSerializer(serializers.ModelSerializer):
 
         return LessonSerializer(active_lessons, many=True).data
 
-
 class ChildProfileSerializer(serializers.ModelSerializer):
-    classroom = ClassroomBasicSerializer(read_only=True)
-    def get_classroom(self, obj):
-        if not obj.classroom:
-            return None
-        return ClassroomSerializer(
-            obj.classroom,
-            context=self.context  
-        ).data
+    classroom = serializers.SerializerMethodField()
 
     class Meta:
         model = ChildProfile
         fields = ["id", "full_name", "credits", "parent", "classroom", "age"]
         read_only_fields = ["id", "parent"]
 
+    def get_classroom(self, obj):
+        if not obj.classroom:
+            return None
+            
+        custom_context = self.context.copy()
+        custom_context['current_child'] = obj
+
+        return ClassroomSerializer(
+            obj.classroom,
+            context=custom_context  
+        ).data
+
+    
 
 class ClassroomSerializer(serializers.ModelSerializer):
     lessons = serializers.SerializerMethodField()
     students = ChildProfileBasicSerializer(many=True, read_only=True)
-
-    def get_lessons(self, obj):
-        child_id = self.context.get("child_id")
-        buffer_time = timezone.now() - timedelta(hours=1)
-        lessons = obj.lessons.filter(
-            is_canceled=False,
-            date_time__gte=buffer_time
-        ).order_by("date_time")
-
-        if child_id:
-            lessons = lessons.exclude(skipped_by__id=child_id)  # ← filter skipped
-
-        return LessonSerializer(lessons, many=True).data
+    teacher = TeacherProfileBasicSerializer(read_only=True)
 
     class Meta:
         model = Classroom
-        fields = ["id", "titlu", "students", "schedule_day", "schedule_time", "is_canceled", "lessons", "classroom_type"]
+        fields = ['id', 'titlu', 'teacher', 'schedule_day', 'schedule_time', 'lessons', 'students', 'teacher', 'classroom_type'] 
 
+    def get_lessons(self, obj):
+        current_child = self.context.get('current_child')
+        
+        lessons_query = obj.lessons.filter(is_canceled=False)
+
+        if current_child:
+            lessons_query = lessons_query.exclude(
+                Q(is_makeup=True) & ~Q(makeup_students=current_child)
+            )
+
+        lessons_query = lessons_query.order_by('date_time')
+
+        return LessonSerializer(lessons_query, many=True).data
 
 class TeacherProfileSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(source="user.first_name", read_only=True)
     last_name = serializers.CharField(source="user.last_name", read_only=True)
     classrooms = ClassroomSerializer(many=True, read_only=True)
+    availabilities = TeacherAvailabilitySerializer(many=True, read_only=True)
 
     class Meta:
         model = TeacherProfile
-        fields = ["first_name", "last_name", "description", "teaching_module", "classrooms"]
-
+        fields = ["first_name", "last_name", "description", "teaching_module", "classrooms", "availabilities"]
 
 class ParentProfileSerializer(serializers.ModelSerializer):
     children = ChildProfileSerializer(many=True, read_only=True)
@@ -301,7 +329,6 @@ class ParentProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = ParentProfile
         fields = "__all__"
-
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod

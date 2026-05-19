@@ -151,6 +151,13 @@ class Lesson(models.Model):
     )
     date_time = models.DateTimeField()
     is_canceled = models.BooleanField(default=False)
+    is_makeup = models.BooleanField(default=False)
+    makeup_students = models.ManyToManyField(
+        'ChildProfile', 
+        blank=True, 
+        null=True,
+        related_name="individual_makeup_lessons"
+    )
     
     channel_name = models.CharField(max_length=255, unique=True, blank=True, null=True )
     whiteboard_uuid = models.CharField(max_length=255,unique=True, blank=True, null=True)

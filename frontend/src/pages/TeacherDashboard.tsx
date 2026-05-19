@@ -15,6 +15,7 @@ export default function TeacherDashboard() {
 
   useEffect(() => {
     async function getTeacherData() {
+      if (teacherData) return;
       try {
         const response = await api.get("api/teacher/profile");
         if (response.status === 200) {
@@ -42,16 +43,27 @@ export default function TeacherDashboard() {
 
   const allLessons: LessonWithClassroom[] = classrooms
     .flatMap((classroom) =>
-      classroom.lessons.map((lesson) => ({
-        ...lesson,
-        classroom,
-      })),
+      classroom.lessons.map((lesson) => {
+        // Logica de filtrare: Dacă e recuperare, păstrăm doar elevii programați
+        const displayedStudents = lesson.is_makeup
+          ? classroom.students.filter((student: any) =>
+              lesson.makeup_students?.includes(student.id),
+            )
+          : classroom.students; // Dacă e lecție normală, îi lăsăm pe toți
+
+        return {
+          ...lesson,
+          classroom: {
+            ...classroom,
+            students: displayedStudents, // Suprascriem lista de studenți doar pentru această lecție
+          },
+        };
+      }),
     )
     .sort(
       (a, b) =>
         new Date(a.date_time).getTime() - new Date(b.date_time).getTime(),
     );
-  console.log(allLessons);
 
   return (
     <div className="page-wrapper">
