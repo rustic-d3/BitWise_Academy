@@ -18,6 +18,7 @@ import TeacherProtectedRoute from "./components/TeacherProtectedRoute";
 import SetSchedulePage from "./pages/SetSchedulePage";
 import SetRecoveryPage from "./pages/SetRecoveryPage";
 import ProfileSettingsPage from "./pages/ProfileSettingsPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 
 function LogOutAndRegister() {
   localStorage.clear();
@@ -44,6 +45,7 @@ function App() {
 
           <Route path="/register" element={<LogOutAndRegister />} />
           <Route path="/login" element={<LogOutAndLogin />} />
+          <Route path="/reset-password/:uidb64/:token" element={<ResetPasswordPage />} />
 
           <Route
             path="/dashboard"

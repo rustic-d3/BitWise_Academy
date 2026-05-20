@@ -21,6 +21,41 @@ export default function ProfilePage() {
 
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("/no_avatar.png");
+  const [isResetting, setIsResetting] = useState(false);
+
+  const handlePasswordReset = async () => {
+    if (!formData.email) {
+      setMessage({
+        type: "error",
+        text: "Nu avem un email salvat pentru a trimite link-ul.",
+      });
+      return;
+    }
+
+    setIsResetting(true);
+    setMessage(null);
+
+    try {
+      const response = await api.post("api/password-reset/", {
+        email: formData.email,
+      });
+
+      if (response.status === 200) {
+        setMessage({
+          type: "success",
+          text: "Link-ul pentru resetarea parolei a fost trimis pe email!",
+        });
+      }
+    } catch (error) {
+      console.error("Eroare la resetarea parolei:", error);
+      setMessage({
+        type: "error",
+        text: "A apărut o eroare la trimiterea email-ului de resetare.",
+      });
+    } finally {
+      setIsResetting(false);
+    }
+  };
 
   useEffect(() => {
     async function fetchProfileData() {
@@ -185,7 +220,26 @@ export default function ProfilePage() {
 
             {/* Resetare Parolă */}
             <div className="input-group password-section">
-              <button className="btn--outline">Resetează Parola</button>
+              <label>Securitate Cont</label>
+              <p
+                style={{
+                  fontSize: "0.9rem",
+                  color: "#6b7280",
+                  marginBottom: "10px",
+                }}
+              >
+                Pentru a-ți schimba parola, apasă pe butonul de mai jos. Îți vom
+                trimite un link securizat pe adresa ta de email.
+              </p>
+              <button
+                type="button" /* IMPORTANT: type="button" ca să nu trimită formularul mare! */
+                className="btn--outline"
+                onClick={handlePasswordReset}
+                disabled={isResetting}
+                style={{ width: "fit-content" }}
+              >
+                {isResetting ? "Se trimite..." : "Trimite link de resetare"}
+              </button>
             </div>
 
             <div className="submit-btn-wrapper">

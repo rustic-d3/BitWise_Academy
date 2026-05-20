@@ -1,7 +1,7 @@
 
 from django.contrib import admin
 from django.urls import path, include
-from api.views import  ChildProfileCreateView, ChildProfileUpdateView, ChildProfileView, ConsumeCreditView, CreateTestView, CreateUserView, EndAndReportView, GetTestQuestionsView, LessonDeleteView, LessonJoinView, LessonSkipView, LoadLessonMaterial, MarkAttendanceView, StartTestView, SubmitTestView, TeacherProfileView,ParentProfileView, CreateClassroomView, TeacherScheduleView, TestStatusView, UserProfilePicture, close_channel, ScheduleMakeupLessonView
+from api.views import  ChildProfileCreateView, ChildProfileUpdateView, ChildProfileView, ConsumeCreditView, CreateTestView, CreateUserView, EndAndReportView, GetTestQuestionsView, LessonDeleteView, LessonJoinView, LessonSkipView, LoadLessonMaterial, MarkAttendanceView, PasswordResetConfirmView, PasswordResetRequestView, StartTestView, SubmitTestView, TeacherProfileView,ParentProfileView, CreateClassroomView, TeacherScheduleView, TestStatusView, UserProfilePicture, close_channel, ScheduleMakeupLessonView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
@@ -12,6 +12,8 @@ urlpatterns = [
     path("api/token/", TokenObtainPairView.as_view(), name='token'),
     path("api/token/refresh", TokenRefreshView.as_view(), name='refresh'),
     path("api-auth/", include("rest_framework.urls")),
+    path('api/password-reset/', PasswordResetRequestView.as_view(), name='password_reset'),
+    path('api/password-reset-confirm/<uidb64>/<token>/', PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     # teacher urls
     path("api/teacher/profile", TeacherProfileView.as_view(), name="teacher_profile"),
     path('api/teacher/schedule/', TeacherScheduleView.as_view(), name='update-teacher-schedule'),

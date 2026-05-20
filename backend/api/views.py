@@ -8,6 +8,7 @@ from google import genai
 from django.core.mail import send_mail
 import threading
 from django.utils.timezone import make_aware
+from django.utils.encoding import force_bytes, force_str
 
 from .supabase_client import upload_profile_picture
 
@@ -27,6 +28,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from datetime import datetime
 from .models import Classroom, TeacherAvailability
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.contrib.auth.tokens import default_token_generator
 
 from .serializers import (
     ChildProfileSerializer,
@@ -64,11 +67,62 @@ class UserProfilePicture(APIView):
                 return Response({"profile_picture": "https://upppanlybtkzquqxfapl.supabase.co/storage/v1/object/public/profile_avatars/no_avatar.png"  }, status=status.HTTP_200_OK)
             return Response({"profile_picture": {parent_profile.profile_picture}}, status=status.HTTP_200_OK)
         return Response({"error": "Poza de profil nu a putut fi extrasă."}, status=status.HTTP_404_NOT_FOUND)
-        
-            
-        
-        
 
+class PasswordResetRequestView(APIView):
+    permission_classes = [AllowAny] 
+
+    def post(self, request):
+        email = request.data.get('email')
+        if not email:
+            return Response({"error": "Email is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(email=email)
+            
+            uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
+            
+            token = default_token_generator.make_token(user)
+            
+            frontend_url = "http://localhost:5173" 
+            reset_link = f"{frontend_url}/reset-password/{uidb64}/{token}/"
+            
+            send_mail(
+                subject="Cerere de resetare a parolei - Bitwise Academy",
+                message=f"Salut {user.first_name},\n\nApasă pe link-ul de mai jos pentru a reseta parola:\n{reset_link}\n\nDacă nu ai cerut resetarea parolei, ignoră acest email.",
+                from_email=settings.EMAIL_HOST_USER,
+                recipient_list=[user.email],
+                fail_silently=False,
+            )
+            
+            return Response({"message": "If an account with that email exists, a reset link has been sent."}, status=status.HTTP_200_OK)
+
+        except User.DoesNotExist:
+            return Response({"message": "If an account with that email exists, a reset link has been sent."}, status=status.HTTP_200_OK)
+
+class PasswordResetConfirmView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request, uidb64, token):
+        new_password = request.data.get('new_password')
+        
+        if not new_password:
+            return Response({"error": "New password is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = User.objects.get(pk=uid)
+            
+            if not default_token_generator.check_token(user, token):
+                return Response({"error": "The reset link is invalid or has expired."}, status=status.HTTP_400_BAD_REQUEST)
+                
+            user.set_password(new_password)
+            user.save()
+            
+            return Response({"message": "Password has been successfully reset!"}, status=status.HTTP_200_OK)
+            
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            return Response({"error": "Invalid reset link."}, status=status.HTTP_400_BAD_REQUEST)
+        
 class TeacherProfileView(generics.RetrieveUpdateAPIView):
     serializer_class = TeacherProfileSerializer
     permission_classes = [IsAuthenticated, IsTeacher]
@@ -105,8 +159,6 @@ class TeacherProfileView(generics.RetrieveUpdateAPIView):
         return Response(
             TeacherProfileSerializer(profile).data,
             status=status.HTTP_200_OK)
-        
-
 
 class ParentProfileView(generics.RetrieveUpdateAPIView):
     serializer_class = ParentProfileSerializer
@@ -139,7 +191,6 @@ class ParentProfileView(generics.RetrieveUpdateAPIView):
         return Response(
             TeacherProfileSerializer(profile).data,
             status=status.HTTP_200_OK)
-
 
 class ChildProfileView(generics.RetrieveAPIView):
     serializer_class = ChildProfileSerializer
@@ -532,8 +583,6 @@ class SubmitTestView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
-
 class TeacherScheduleView(APIView):
     permission_classes = [IsAuthenticated, IsTeacher]
 
@@ -620,7 +669,6 @@ class TeacherScheduleView(APIView):
             status=status.HTTP_200_OK
         )
         
- 
 def trimite_raport_async(lesson, child, parent_email, ai_test):
     try:
         test_result = TestResult.objects.filter(lesson=lesson, child=child).first()
@@ -690,8 +738,7 @@ def trimite_raport_async(lesson, child, parent_email, ai_test):
         
     except Exception as e:
         print(f"Eroare la generarea raportului pentru {child.full_name}: {e}") 
-        
-        
+                
 class EndAndReportView(APIView):
     permission_classes = [IsAuthenticated, IsTeacher]
 
