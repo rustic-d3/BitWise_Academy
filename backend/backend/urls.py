@@ -1,22 +1,25 @@
 
 from django.contrib import admin
 from django.urls import path, include
-from api.views import  ChildProfileCreateView, ChildProfileUpdateView, ChildProfileView, ConsumeCreditView, CreateTestView, CreateUserView, EndAndReportView, GetTestQuestionsView, LessonDeleteView, LessonJoinView, LessonSkipView, LoadLessonMaterial, MarkAttendanceView, StartTestView, SubmitTestView, TeacherProfileView,ParentProfileView, CreateClassroomView, TeacherScheduleView, TestStatusView, close_channel, ScheduleMakeupLessonView
+from api.views import  ChildProfileCreateView, ChildProfileUpdateView, ChildProfileView, ConsumeCreditView, CreateTestView, CreateUserView, EndAndReportView, GetTestQuestionsView, LessonDeleteView, LessonJoinView, LessonSkipView, LoadLessonMaterial, MarkAttendanceView, StartTestView, SubmitTestView, TeacherProfileView,ParentProfileView, CreateClassroomView, TeacherScheduleView, TestStatusView, UserProfilePicture, close_channel, ScheduleMakeupLessonView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     #authentication process urls
     path('api/user/register/', CreateUserView.as_view(), name='register'),
+    path("api/user/profile-picture", UserProfilePicture.as_view(), name='get-user-profile-picture'),
     path("api/token/", TokenObtainPairView.as_view(), name='token'),
     path("api/token/refresh", TokenRefreshView.as_view(), name='refresh'),
     path("api-auth/", include("rest_framework.urls")),
     # teacher urls
     path("api/teacher/profile", TeacherProfileView.as_view(), name="teacher_profile"),
     path('api/teacher/schedule/', TeacherScheduleView.as_view(), name='update-teacher-schedule'),
+    path("api/teacher/profile-settings", TeacherProfileView.as_view(), name="teacher-profile"),
     
     #parent urls
     path("api/parent/profile", ParentProfileView.as_view(), name="parent_profile"),
+    path("api/parent/profile-settings", ParentProfileView.as_view(), name="teacher-profile"),
     #child urls
     path('api/children/add/', ChildProfileCreateView.as_view(), name='child-add'),
     path("api/child/<int:id>/", ChildProfileView.as_view(), name="child_profile"),

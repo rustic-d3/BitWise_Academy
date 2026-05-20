@@ -9,6 +9,8 @@ from django.core.mail import send_mail
 import threading
 from django.utils.timezone import make_aware
 
+from .supabase_client import upload_profile_picture
+
 from .permissions import IsAdmin, IsParent, IsTeacher
 from .models import ChildProfile, Lesson, TestResult, User
 from rest_framework import generics
@@ -42,6 +44,30 @@ class CreateUserView(generics.CreateAPIView):
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
 
+class UserProfilePicture(APIView):
+    def get(self, request):
+        user = self.request.user
+        
+        
+        
+        
+        if(user.role == "TEACHER"):
+            teacher_profile = user.teacher_profile or None
+            if(not teacher_profile.profile_picture):    
+                return Response({"profile_picture": "https://upppanlybtkzquqxfapl.supabase.co/storage/v1/object/public/profile_avatars/no_avatar.png"  }, status=status.HTTP_200_OK)
+            
+            return Response({"profile_picture": {teacher_profile.profile_picture}}, status=status.HTTP_200_OK)
+        
+        if(user.role == "PARENT"):
+            parent_profile = user.parent_profile or None
+            if(not parent_profile.profile_picture):    
+                return Response({"profile_picture": "https://upppanlybtkzquqxfapl.supabase.co/storage/v1/object/public/profile_avatars/no_avatar.png"  }, status=status.HTTP_200_OK)
+            return Response({"profile_picture": {parent_profile.profile_picture}}, status=status.HTTP_200_OK)
+        return Response({"error": "Poza de profil nu a putut fi extrasă."}, status=status.HTTP_404_NOT_FOUND)
+        
+            
+        
+        
 
 class TeacherProfileView(generics.RetrieveUpdateAPIView):
     serializer_class = TeacherProfileSerializer
@@ -49,6 +75,37 @@ class TeacherProfileView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user.teacher_profile
+    
+    def update(self, request, *args, **kwargs):
+        profile = self.get_object()
+
+        picture = request.FILES.get("profile_picture")
+        if picture:
+            ext = picture.name.split(".")[-1]
+            filename = f"teacher_{request.user.id}.{ext}"
+            public_url = upload_profile_picture(picture, filename)
+            profile.profile_picture = public_url
+            profile.save()
+
+        
+        email = request.data.get("email")
+        phone = request.data.get("phone_number")
+        description = request.data.get("description")
+        password = request.data.get("password")
+
+        if email:
+            request.user.email = email
+        if phone is not None:
+            profile.phone_number = phone
+        if description is not None:
+            profile.description = description
+
+        profile.save()
+
+        return Response(
+            TeacherProfileSerializer(profile).data,
+            status=status.HTTP_200_OK)
+        
 
 
 class ParentProfileView(generics.RetrieveUpdateAPIView):
@@ -57,6 +114,31 @@ class ParentProfileView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user.parent_profile
+    
+    def update(self, request, *args, **kwargs):
+        profile = self.get_object()
+
+        picture = request.FILES.get("profile_picture")
+        if picture:
+            ext = picture.name.split(".")[-1]
+            filename = f"parent_{request.user.id}.{ext}"
+            public_url = upload_profile_picture(picture, filename)
+            profile.profile_picture = public_url
+            profile.save()
+
+        
+        email = request.data.get("email")
+        phone = request.data.get("phone_number")
+
+        if email:
+            request.user.email = email
+        if phone is not None:
+            profile.phone_number = phone
+        profile.save()
+
+        return Response(
+            TeacherProfileSerializer(profile).data,
+            status=status.HTTP_200_OK)
 
 
 class ChildProfileView(generics.RetrieveAPIView):

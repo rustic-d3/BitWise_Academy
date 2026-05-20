@@ -36,7 +36,7 @@ class TeacherProfile(models.Model):
         null=True,
         blank=True,
     )
-
+    profile_picture = models.CharField(max_length=500, blank=True, null=True)
     class Meta:
         verbose_name = "Teacher"
         verbose_name_plural = "Teachers"
@@ -54,7 +54,7 @@ class TeacherProfile(models.Model):
 
 class ParentProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="parent_profile")
-
+    profile_picture = models.CharField(max_length=500, blank=True, null=True)
     class Meta:
         verbose_name = "Parent"
         verbose_name_plural = "Parents"

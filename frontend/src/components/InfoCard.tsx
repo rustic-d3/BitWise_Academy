@@ -6,6 +6,7 @@ export interface InfoCardData {
   first_name: string;
   last_name: string;
   description: string;
+  profile_picture: string;
 }
 
 interface InfoCardProps {
@@ -21,7 +22,7 @@ export default function InfoCard({ data }: InfoCardProps) {
   return (
     <div className="card-container">
       <div className="decorator-container">
-        <img src="/avatar.png" alt="avatar_photo" />
+        <img src={data.profile_picture} alt="avatar_photo" />
       </div>
       <div className="info-container">
         <h1>

@@ -114,7 +114,7 @@ export default function Form({ form_type, route }: FormProps) {
   return (
     <div className="form-container">
       <h1 className="form-title">
-        {isRegister ? "Create an account" : "Welcome"}
+        {isRegister ? "Crează un cont nou" : "Bine ai venit!"}
       </h1>
 
       <form onSubmit={handleSubmit} className="form-group">

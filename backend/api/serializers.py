@@ -224,10 +224,12 @@ class TeacherProfileBasicSerializer(serializers.ModelSerializer):
     last_name = serializers.CharField(source="user.last_name", read_only=True)
     availabilities = TeacherAvailabilitySerializer(many=True, read_only=True)
     booked_slots = serializers.SerializerMethodField()
+    email = serializers.EmailField(source="user.email", read_only=True)
+    phone_number = serializers.CharField(source="user.phone_number", allow_blank=True, required=False)
 
     class Meta:
         model = TeacherProfile
-        fields = ["first_name", "last_name", "description", "teaching_module", "availabilities", "booked_slots"]
+        fields = ["first_name", "last_name", "description", "teaching_module", "availabilities", "booked_slots", "profile_picture", "email", "phone_number",]
     def get_booked_slots(self, obj):
         from django.utils import timezone
         now = timezone.now()
@@ -313,11 +315,13 @@ class TeacherProfileSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(source="user.first_name", read_only=True)
     last_name = serializers.CharField(source="user.last_name", read_only=True)
     classrooms = ClassroomSerializer(many=True, read_only=True)
+    email = serializers.EmailField(source="user.email", read_only=True)
+    phone_number = serializers.CharField( source="user.phone_number",allow_blank=True, required=False)
     availabilities = TeacherAvailabilitySerializer(many=True, read_only=True)
 
     class Meta:
         model = TeacherProfile
-        fields = ["first_name", "last_name", "description", "teaching_module", "classrooms", "availabilities"]
+        fields = ["first_name", "last_name", "description", "teaching_module", "classrooms", "availabilities", "profile_picture", "email", "phone_number",]
 
 class ParentProfileSerializer(serializers.ModelSerializer):
     children = ChildProfileSerializer(many=True, read_only=True)

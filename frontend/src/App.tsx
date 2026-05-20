@@ -17,6 +17,7 @@ import AddChildPage from "./pages/AddChildPage";
 import TeacherProtectedRoute from "./components/TeacherProtectedRoute";
 import SetSchedulePage from "./pages/SetSchedulePage";
 import SetRecoveryPage from "./pages/SetRecoveryPage";
+import ProfileSettingsPage from "./pages/ProfileSettingsPage";
 
 function LogOutAndRegister() {
   localStorage.clear();
@@ -69,6 +70,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <RestrictedPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile-settings"
+            element={
+              <ProtectedRoute>
+                <ProfileSettingsPage />
               </ProtectedRoute>
             }
           />
