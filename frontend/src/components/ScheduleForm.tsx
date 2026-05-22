@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../styles/schedule_form.scss";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
@@ -10,20 +10,76 @@ interface ScheduleRow {
   endTime: string;
 }
 
-export default function ScheduleForm() {
+interface ScheduleFormProps {
+  initialData?: any;
+}
+
+export default function ScheduleForm({ initialData }: ScheduleFormProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  const reverseDayMapping: Record<string, string> = {
+    Mon: "Luni",
+    Tue: "Marți",
+    Wed: "Miercuri",
+    Thu: "Joi",
+    Fri: "Vineri",
+    Sat: "Sâmbătă",
+    Sun: "Duminică",
+  };
+
   const [schedule, setSchedule] = useState<ScheduleRow[]>([
-    { id: "1", day: "Luni", startTime: "09:00", endTime: "14:00" },
-    { id: "2", day: "Marți", startTime: "09:00", endTime: "14:00" },
-    { id: "3", day: "Miercuri", startTime: "09:00", endTime: "14:00" },
-    { id: "4", day: "Joi", startTime: "09:00", endTime: "14:00" },
-    { id: "5", day: "Vineri", startTime: "09:00", endTime: "14:00" },
-    { id: "6", day: "Sâmbătă", startTime: "09:00", endTime: "14:00" },
-    { id: "7", day: "Duminică", startTime: "09:00", endTime: "14:00" },
+    { id: "1", day: "Luni", startTime: "", endTime: "" },
+    { id: "2", day: "Marți", startTime: "", endTime: "" },
+    { id: "3", day: "Miercuri", startTime: "", endTime: "" },
+    { id: "4", day: "Joi", startTime: "", endTime: "" },
+    { id: "5", day: "Vineri", startTime: "", endTime: "" },
+    { id: "6", day: "Sâmbătă", startTime: "", endTime: "" },
+    { id: "7", day: "Duminică", startTime: "", endTime: "" },
   ]);
+
+  useEffect(() => {
+    if (initialData && initialData.length > 0) {
+      // Șablon de bază curat
+      let newSchedule = [
+        { id: "1", day: "Luni", startTime: "", endTime: "" },
+        { id: "2", day: "Marți", startTime: "", endTime: "" },
+        { id: "3", day: "Miercuri", startTime: "", endTime: "" },
+        { id: "4", day: "Joi", startTime: "", endTime: "" },
+        { id: "5", day: "Vineri", startTime: "", endTime: "" },
+        { id: "6", day: "Sâmbătă", startTime: "", endTime: "" },
+        { id: "7", day: "Duminică", startTime: "", endTime: "" },
+      ];
+
+      initialData.forEach((avail: any) => {
+        const romanianDay = reverseDayMapping[avail.day] || avail.day;
+        const formattedStart = avail.start_time.substring(0, 5);
+        const formattedEnd = avail.end_time.substring(0, 5);
+
+        const rowIndex = newSchedule.findIndex(
+          (row) => row.day === romanianDay,
+        );
+
+        if (rowIndex !== -1) {
+          if (newSchedule[rowIndex].startTime === "") {
+            newSchedule[rowIndex].startTime = formattedStart;
+            newSchedule[rowIndex].endTime = formattedEnd;
+          } else {
+            newSchedule.splice(rowIndex + 1, 0, {
+              id: crypto.randomUUID(),
+              day: romanianDay,
+              startTime: formattedStart,
+              endTime: formattedEnd,
+            });
+          }
+        }
+      });
+
+      setSchedule(newSchedule);
+    }
+  }, [initialData]);
 
   const handleTimeChange = (
     id: string,
@@ -138,7 +194,6 @@ export default function ScheduleForm() {
                   onChange={(e) =>
                     handleTimeChange(row.id, "startTime", e.target.value)
                   }
-                  required
                 />
 
                 <span className="time-separator">—</span>
@@ -150,7 +205,6 @@ export default function ScheduleForm() {
                   onChange={(e) =>
                     handleTimeChange(row.id, "endTime", e.target.value)
                   }
-                  required
                 />
               </div>
 

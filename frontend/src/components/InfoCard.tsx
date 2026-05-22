@@ -7,6 +7,7 @@ export interface InfoCardData {
   last_name: string;
   description: string;
   profile_picture: string;
+  availabilities: string;
 }
 
 interface InfoCardProps {

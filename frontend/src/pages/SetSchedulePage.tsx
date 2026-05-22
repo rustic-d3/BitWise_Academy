@@ -87,7 +87,7 @@ export default function SetSchedulePage() {
               <InfoCard data={teacherData} />
             </div>
             <div className="col-2">
-              <ScheduleForm />
+              <ScheduleForm initialData={teacherData?.availabilities} />
             </div>
           </div>
         </div>
