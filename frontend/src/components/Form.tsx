@@ -145,7 +145,12 @@ export default function Form({ form_type, route }: FormProps) {
         {isRegister ? "Crează un cont nou" : "Bine ai venit!"}
       </h1>
 
-      <form onSubmit={handleSubmit} className="form-group" data-cy="auth-form">
+      <form
+        onSubmit={handleSubmit}
+        className="form-group"
+        data-cy="auth-form"
+        noValidate
+      >
         {isRegister && (
           <div className="row">
             <div className="field-wrapper">
