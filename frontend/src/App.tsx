@@ -32,9 +32,15 @@ function LogOutAndLogin() {
 
   return <Login />;
 }
+function Dashboard() {
+  const role = getUserRole(); 
+  if (role?.toLowerCase() === "parent") return <ParentDashboard />;
+  if (role?.toLowerCase() === "teacher") return <TeacherDashboard />;
+  return null;
+}
 
 function App() {
-  const role = getUserRole();
+  
 
   return (
     <>
@@ -51,10 +57,7 @@ function App() {
             path="/dashboard"
             element={
               <ProtectedRoute>
-                {role && role.toLowerCase() === "parent" && <ParentDashboard />}
-                {role && role.toLowerCase() === "teacher" && (
-                  <TeacherDashboard />
-                )}
+                <Dashboard />
               </ProtectedRoute>
             }
           />

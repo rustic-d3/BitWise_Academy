@@ -13,8 +13,8 @@ export interface InfoCardData {
 interface InfoCardProps {
   data?: InfoCardData | null;
 }
-const role = getUserRole();
 export default function InfoCard({ data }: InfoCardProps) {
+  const role = getUserRole();
   const navigate = useNavigate();
   const location = useLocation();
   if (!data) {

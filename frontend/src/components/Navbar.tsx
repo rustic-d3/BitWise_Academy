@@ -11,8 +11,10 @@ interface RoleProps {
 export default function Navbar({ role }: RoleProps) {
   const isParent = role === "parent";
   const [menuOpen, setMenuOpen] = useState(false);
-  const hasChildren = localStorage.getItem("childrenNumber") != "0";
   const [profilePicture, setProfilePicture] = useState("/no-avatar.png");
+  const [hasChildren, setHasChildren] = useState(
+  localStorage.getItem("childrenNumber") != "0"
+);
   const navigate = useNavigate();
 
   useEffect(() => {
