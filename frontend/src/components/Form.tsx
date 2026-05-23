@@ -38,23 +38,51 @@ export default function Form({ form_type, route }: FormProps) {
       passwordError: "",
     };
 
-    if (!formData.first_name.trim())
-      errors.firstNameError = "First name can't be empty";
-    if (!formData.last_name.trim())
-      errors.lastNameError = "Last name can't be empty";
-    if (!formData.username.trim())
-      errors.usernameError = "Username can't be empty";
-    if (!formData.email.trim()) errors.emailError = "Email can't be empty";
-    else if (!/\S+@\S+\.\S+/.test(formData.email))
-      errors.emailError = "Invalid email format";
-    if (!formData.phone_number.trim())
-      errors.phoneNumberError = "Phone number can't be empty";
-    else if (!/^\+?[\d]{9,15}$/.test(formData.phone_number))
-      errors.phoneNumberError = "Invalid phone number";
-    if (!formData.password.trim())
-      errors.passwordError = "Password can't be empty";
-    else if (formData.password.length < 8)
-      errors.passwordError = "Password must be at least 8 characters";
+    // 1. validari comune
+    if (!formData.username.trim()) {
+      errors.usernameError = "Numele de utilizator este obligatoriu.";
+    } else if (formData.username.trim().length < 3) {
+      errors.usernameError =
+        "Numele de utilizator trebuie să aibă minim 3 caractere.";
+    }
+
+    if (!formData.password.trim()) {
+      errors.passwordError = "Parola este obligatorie.";
+    }
+
+    // 2. Validări pentru register
+    if (isRegister) {
+      if (!formData.first_name.trim())
+        errors.firstNameError = "Prenumele este obligatoriu.";
+
+      if (!formData.last_name.trim())
+        errors.lastNameError = "Numele este obligatoriu.";
+
+      if (!formData.email.trim())
+        errors.emailError = "Email-ul este obligatoriu.";
+      else if (!/\S+@\S+\.\S+/.test(formData.email))
+        errors.emailError = "Formatul email-ului este invalid.";
+
+      if (!formData.phone_number.trim())
+        errors.phoneNumberError = "Numărul de telefon este obligatoriu.";
+      else if (!/^\+?[\d]{9,15}$/.test(formData.phone_number))
+        errors.phoneNumberError = "Număr de telefon invalid.";
+
+      // Validări complexe pentru parolă
+      if (formData.password.trim()) {
+        if (formData.password.length < 8) {
+          errors.passwordError = "Parola trebuie să aibă minim 8 caractere.";
+        } else if (!/[A-Z]/.test(formData.password)) {
+          errors.passwordError =
+            "Parola trebuie să conțină cel puțin o literă mare.";
+        } else if (!/[0-9]/.test(formData.password)) {
+          errors.passwordError = "Parola trebuie să conțină cel puțin o cifră.";
+        } else if (!/[^A-Za-z0-9]/.test(formData.password)) {
+          errors.passwordError =
+            "Parola trebuie să conțină cel puțin un caracter special.";
+        }
+      }
+    }
 
     setValidationErrors(errors);
     return !Object.values(errors).some(Boolean);
@@ -64,7 +92,7 @@ export default function Form({ form_type, route }: FormProps) {
     e.preventDefault();
     setAuthError("");
 
-    if (isRegister && !validateForm()) return;
+    if (!validateForm()) return;
     const loginData = {
       username: formData.username,
       password: formData.password,
@@ -113,11 +141,11 @@ export default function Form({ form_type, route }: FormProps) {
 
   return (
     <div className="form-container">
-      <h1 className="form-title">
+      <h1 className="form-title" data-cy="form-title">
         {isRegister ? "Crează un cont nou" : "Bine ai venit!"}
       </h1>
 
-      <form onSubmit={handleSubmit} className="form-group">
+      <form onSubmit={handleSubmit} className="form-group" data-cy="auth-form">
         {isRegister && (
           <div className="row">
             <div className="field-wrapper">
@@ -126,9 +154,10 @@ export default function Form({ form_type, route }: FormProps) {
                 placeholder="Nume"
                 value={formData.last_name}
                 onChange={(e) => updateField("last_name", e.target.value)}
+                data-cy="nameField"
               />
               {validationErrors.firstNameError && (
-                <span className="error-message">
+                <span className="error-message" data-cy="firstName-error">
                   {validationErrors.firstNameError}
                 </span>
               )}
@@ -139,9 +168,10 @@ export default function Form({ form_type, route }: FormProps) {
                 placeholder="Prenume"
                 value={formData.first_name}
                 onChange={(e) => updateField("first_name", e.target.value)}
+                data-cy="surnameField"
               />
               {validationErrors.lastNameError && (
-                <span className="error-message">
+                <span className="error-message" data-cy="lastName-error">
                   {validationErrors.lastNameError}
                 </span>
               )}
@@ -155,9 +185,10 @@ export default function Form({ form_type, route }: FormProps) {
             placeholder="Nume de utilizator"
             value={formData.username}
             onChange={(e) => updateField("username", e.target.value)}
+            data-cy="usernameField"
           />
           {validationErrors.usernameError && (
-            <span className="error-message">
+            <span className="error-message" data-cy="username-error">
               {validationErrors.usernameError}
             </span>
           )}
@@ -171,9 +202,10 @@ export default function Form({ form_type, route }: FormProps) {
               placeholder="Email"
               value={formData.email}
               onChange={(e) => updateField("email", e.target.value)}
+              data-cy="emailField"
             />
             {validationErrors.emailError && (
-              <span className="error-message">
+              <span className="error-message" data-cy="email-error">
                 {validationErrors.emailError}
               </span>
             )}
@@ -184,13 +216,18 @@ export default function Form({ form_type, route }: FormProps) {
           <div className="field-wrapper">
             <label>Phone Number</label>
             <input
-              type="text"
+              type="tel"
               placeholder="Număr de telefon"
+              maxLength={12}
               value={formData.phone_number}
-              onChange={(e) => updateField("phone_number", e.target.value)}
+              onChange={(e) => {
+                const formattedValue = e.target.value.replace(/[^0-9+]/g, "");
+                updateField("phone_number", formattedValue);
+              }}
+              data-cy="phoneField"
             />
             {validationErrors.phoneNumberError && (
-              <span className="error-message">
+              <span className="error-message" data-cy="phone-error">
                 {validationErrors.phoneNumberError}
               </span>
             )}
@@ -204,10 +241,11 @@ export default function Form({ form_type, route }: FormProps) {
             placeholder="Parolă"
             value={formData.password}
             onChange={(e) => updateField("password", e.target.value)}
+            data-cy="passwordField"
           />
 
           {validationErrors.passwordError && (
-            <span className="error-message">
+            <span className="error-message" data-cy="password-error">
               {validationErrors.passwordError}
             </span>
           )}
@@ -215,17 +253,24 @@ export default function Form({ form_type, route }: FormProps) {
 
         {isRegister && (
           <p className="footer-text">
-            Ai deja un cont? <a href="/login">Loghează-te aici!</a>
+            Ai deja un cont?{" "}
+            <a href="/login" data-cy="login-link">
+              Loghează-te aici!
+            </a>
           </p>
         )}
         {!isRegister && (
           <p className="footer-text">
-            Nu ai cont? <a href="/register">Înregistrează-te aici!</a>
+            Nu ai cont?{" "}
+            <a href="/register" data-cy="register-link">
+              Înregistrează-te aici!
+            </a>
           </p>
         )}
         {authError && (
           <p
             className="error-message"
+            data-cy="login-error-message"
             style={{
               color: "#EF4444",
               fontSize: "0.875rem",
@@ -237,7 +282,7 @@ export default function Form({ form_type, route }: FormProps) {
           </p>
         )}
 
-        <button type="submit" className="submit-btn">
+        <button type="submit" className="submit-btn" data-cy="submitButton">
           {isRegister ? "Înregistrează-te" : "Log In"}
         </button>
       </form>

@@ -404,6 +404,13 @@ FodyWeavers.xsd
 !.vscode/extensions.json
 !.vscode/*.code-snippets
 
+# Cypress auto-generated files
+cypress/videos/
+cypress/screenshots/
+cypress/downloads/
+
+# Cypress environment variables (if you store secret API keys/passwords)
+cypress.env.json
 # Local History for Visual Studio Code
 .history/
 

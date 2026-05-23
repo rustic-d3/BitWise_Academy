@@ -35,3 +35,16 @@
 //     }
 //   }
 // }
+
+Cypress.Commands.add("getTestData", (dataSelector) => {
+  return cy.get(`[data-test=${dataSelector}]`);
+});
+Cypress.Commands.add("loginAs", (role) => {
+  cy.request("POST", "http://localhost:8000/api/token/", {
+    username: role === "teacher" ? "wanessa_grati" : "parent1",
+    password: role === "teacher" ? "Wanessa1@mail.com" : "Parent2@mail.com",
+  }).then((resp) => {
+    window.localStorage.setItem("access", resp.body.access);
+    window.localStorage.setItem("refresh", resp.body.refresh);
+  });
+});
