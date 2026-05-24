@@ -1,0 +1,153 @@
+@use "variables" as v;
+@use "global" as g;
+
+/* Fereastra plutitoare din DREAPTA-JOS */
+.glitch-widget {
+  position: fixed;
+  bottom: v.$spacing-xl;
+  right: v.$spacing-xl;
+  width: 360px;
+  height: 520px;
+  max-height: calc(100vh - 40px);
+  background-color: g.$white;
+  z-index: 9999; /* Va sta mereu peste orice alt element */
+  display: flex;
+  flex-direction: column;
+
+  /* Stilizarea widget-ului */
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  overflow: hidden; /* Taie colțurile interioare pentru a respecta border-radius */
+  border: 1px solid g.$gray-light;
+
+  /* Animație elegantă de apariție (pop-up) */
+  transform-origin: bottom right;
+  animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+
+  /* Responsivitate pentru ecrane mici (mobil) */
+  @media (max-width: v.$breakpoint-mobile) {
+    width: calc(100% - 32px); // Lăsăm 16px margine stânga-dreapta
+    bottom: 16px;
+    right: 16px;
+    height: 600px;
+  }
+}
+
+@keyframes popUp {
+  from {
+    opacity: 0;
+    transform: scale(0.8) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Header-ul widget-ului */
+.glitch-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: v.$spacing-md;
+  background: g.$primary-gradient;
+  color: g.$white;
+
+  h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .close-btn {
+    color: g.$white;
+    font-size: 1.2rem;
+    line-height: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 6px;
+    border-radius: 50%; /* Colțuri perfect rotunde pentru X */
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+  }
+}
+
+/* Zona mesajelor */
+.glitch-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: v.$spacing-md;
+  display: flex;
+  flex-direction: column;
+  gap: v.$spacing-sm;
+  background-color: #f8f9fa;
+
+  .message {
+    max-width: 85%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    word-wrap: break-word;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+
+    &.user {
+      align-self: flex-end;
+      background: g.$primary-gradient;
+      color: g.$white;
+      border-bottom-right-radius: 4px;
+    }
+
+    &.bot {
+      align-self: flex-start;
+      background-color: g.$white;
+      color: g.$text-dark;
+      border: 1px solid g.$gray-light;
+      border-bottom-left-radius: 4px;
+    }
+  }
+}
+
+/* Zona de scriere text */
+.glitch-input-area {
+  display: flex;
+  padding: v.$spacing-md;
+  background-color: g.$white;
+  border-top: 1px solid g.$gray-light;
+  gap: v.$spacing-sm;
+
+  input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid g.$input-border;
+    border-radius: 3px; /* Input rotunjit, modern */
+    font-family: inherit;
+    font-size: 0.9rem;
+    transition: border-color 0.2s ease;
+
+    &:focus {
+      outline: none;
+      border-color: g.$primary-orange;
+    }
+
+    &:disabled {
+      background-color: g.$gray-light;
+      cursor: not-allowed;
+    }
+  }
+
+  button {
+    white-space: nowrap;
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+}

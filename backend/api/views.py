@@ -5,6 +5,7 @@ from django.db import transaction
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404
 from google import genai
+
 from django.core.mail import send_mail
 import threading
 from django.utils.timezone import make_aware
@@ -593,6 +594,8 @@ class ScheduleMakeupLessonView(APIView):
 
 # Tests views
 
+client = genai.Client()
+
 
 class CreateTestView(APIView):
     parser_classes = (MultiPartParser, FormParser)
@@ -614,8 +617,6 @@ class CreateTestView(APIView):
                     {"error": "PDF-ul pare să fie gol sau scanat ca imagine."},
                     status=400,
                 )
-
-            client = genai.Client()
 
             prompt = f"""
             Analizează următorul text dintr-un material didactic și generează un test grilă cu 10 întrebări.
@@ -1022,6 +1023,70 @@ class EndAndReportView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+
+class GlitchChatView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        lesson_id = request.data.get("lesson_id")
+        user_message = request.data.get("message")
+        frontend_history = request.data.get("history", [])
+
+        if not lesson_id or not user_message:
+            return Response(
+                {"error": "Lipsesc datele necesare."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            lesson = Lesson.objects.get(id=lesson_id)
+            lesson_content = lesson.lesson_material_text
+
+            system_instruction = f"""
+            Ești Glitch, un robot educațional prietenos, asistent în cadrul platformei BitWise Academy.
+            Vorbești mereu la persoana I, ești politicos și încurajator.
+            
+            REGULA TA DE AUR: Ai voie să răspunzi STRICT pe baza informațiilor din textul lecției de mai jos. 
+            Dacă elevul pune o întrebare care nu se regăsește în textul lecției, 
+            TREBUIE să răspunzi cu: "Scuze, dar sunt setat să te ajut doar cu informații din lecția curentă!"
+            
+            TEXTUL LECȚIEI:
+            {lesson_content}
+            """
+
+            # Formatăm istoricul primit de la React pentru NOUL format Gemini
+            gemini_history = []
+            for msg in frontend_history:
+                role = "model" if msg["role"] == "bot" else "user"
+                # Noul SDK folosește tipuri stricte de date (types.Content și types.Part)
+                gemini_history = []
+            for msg in frontend_history:
+                role = "model" if msg["role"] == "bot" else "user"
+                gemini_history.append({"role": role, "parts": [{"text": msg["text"]}]})
+
+            # Creăm sesiunea de chat și îi dăm 'config' tot ca pe un dicționar
+            chat = client.chats.create(
+                model="gemini-2.5-flash",
+                config={"system_instruction": system_instruction, "temperature": 0.3},
+                history=gemini_history,
+            )
+
+            # Trimitem mesajul nou
+            response = chat.send_message(user_message)
+
+            return Response({"reply": response.text}, status=status.HTTP_200_OK)
+
+        except Lesson.DoesNotExist:
+            return Response(
+                {"error": "Lecția nu a fost găsită."}, status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            print(f"Eroare Gemini API: {str(e)}")
+            return Response(
+                {"error": "Glitch are probleme tehnice momentan."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
 @api_view(["POST"])

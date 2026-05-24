@@ -9,6 +9,7 @@ from api.views import (
     CreateUserView,
     EndAndReportView,
     GetTestQuestionsView,
+    GlitchChatView,
     LessonDeleteView,
     LessonJoinView,
     LessonSkipView,
@@ -147,6 +148,11 @@ urlpatterns = [
     path(
         "api/lessons/<int:lesson_id>/consume-credit/",
         ConsumeCreditView.as_view(),
+        name="consume-credit",
+    ),
+    path(
+        "api/glitch/chat/",
+        GlitchChatView.as_view(),
         name="consume-credit",
     ),
 ]
