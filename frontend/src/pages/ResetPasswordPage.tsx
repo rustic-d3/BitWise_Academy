@@ -84,6 +84,7 @@ export default function ResetPasswordPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               placeholder="********"
+              data-cy="new-password-input"
             />
           </div>
 
@@ -96,6 +97,7 @@ export default function ResetPasswordPage() {
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
               placeholder="********"
+              data-cy="confirm-password-input"
             />
           </div>
 
@@ -103,6 +105,7 @@ export default function ResetPasswordPage() {
             type="submit"
             className="btn--primary submit-btn"
             disabled={isLoading}
+            data-cy="submit-new-password-button"
           >
             {isLoading ? "Se procesează..." : "Resetează parola"}
           </button>

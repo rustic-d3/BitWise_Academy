@@ -27,7 +27,7 @@ export default function AddChildPage() {
   if (cardId === "1") {
     credits = 4;
   } else if (cardId === "2") {
-    credits = 12;
+    credits = 48;
   }
 
   useEffect(() => {

@@ -110,6 +110,7 @@
 
     &:hover {
       background-color: rgba(g.$primary-orange, 0.05);
+      color: g.$white;
       transform: translateY(-2px);
     }
   }

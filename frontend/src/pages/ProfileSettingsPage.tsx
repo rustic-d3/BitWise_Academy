@@ -151,12 +151,15 @@ export default function ProfilePage() {
           <h2 className="profile-title">Setări Profil</h2>
 
           {message && (
-            <div className={`profile-message profile-message--${message.type}`}>
+            <div
+              className={`profile-message profile-message--${message.type}`}
+              data-cy="reset-message"
+            >
               {message.text}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="profile-form">
+          <form onSubmit={handleSubmit} className="profile-form" noValidate>
             {/* Secțiunea pentru poză */}
             <div className="profile-avatar-section">
               <img
@@ -187,6 +190,7 @@ export default function ProfilePage() {
                 value={formData.email}
                 onChange={handleInputChange}
                 className="input-field"
+                data-cy="profile-email-field"
                 required
               />
             </div>
@@ -237,13 +241,14 @@ export default function ProfilePage() {
                 onClick={handlePasswordReset}
                 disabled={isResetting}
                 style={{ width: "fit-content" }}
+                data-cy="reset-submit-button"
               >
                 {isResetting ? "Se trimite..." : "Trimite link de resetare"}
               </button>
             </div>
 
             <div className="submit-btn-wrapper">
-              <button type="submit" className="btn--primary">
+              <button type="submit" className="btn--primary" data-cy="save-button">
                 Salvează Modificările
               </button>
             </div>

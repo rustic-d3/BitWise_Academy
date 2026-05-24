@@ -121,13 +121,23 @@ export default function ScheduleForm({ initialData }: ScheduleFormProps) {
     setErrorMessage(null);
     setSuccessMessage(null);
 
-    const validSchedule = schedule.filter(
+    const filledRows = schedule.filter(
       (row) => row.startTime !== "" && row.endTime !== "",
     );
 
+    for (const row of filledRows) {
+      if (row.startTime >= row.endTime) {
+        setErrorMessage(
+          `Eroare la ziua de ${row.day}: Ora de început trebuie să fie înaintea orei de sfârșit!`,
+        );
+        setIsSaving(false);
+        return;
+      }
+    }
+
     try {
       const response = await api.post("/api/teacher/schedule/", {
-        schedule: validSchedule,
+        schedule: filledRows,
       });
 
       setSuccessMessage(

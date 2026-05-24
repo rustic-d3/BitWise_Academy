@@ -48,3 +48,19 @@ Cypress.Commands.add("loginAs", (role) => {
     window.localStorage.setItem("refresh", resp.body.refresh);
   });
 });
+
+Cypress.Commands.add("login", (username, password) => {
+  // Facem cererea POST direct către backend, ocolind interfața grafică
+  cy.request({
+    method: "POST",
+    url: "http://localhost:8000/api/token/",
+    body: {
+      username: username,
+      password: password,
+    },
+    failOnStatusCode: false,
+  }).then((response) => {
+    window.localStorage.setItem("access", response.body.access);
+    window.localStorage.setItem("refresh", response.body.refresh);
+  });
+});
