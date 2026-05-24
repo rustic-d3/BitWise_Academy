@@ -1,10 +1,19 @@
 from datetime import timedelta
+import re
 import time
 from django.db.models import Q
 
 from django.utils import timezone
 import requests
-from api.models import ChildProfile, Classroom, Lesson, TeacherAvailability, User, TeacherProfile, ParentProfile
+from api.models import (
+    ChildProfile,
+    Classroom,
+    Lesson,
+    TeacherAvailability,
+    User,
+    TeacherProfile,
+    ParentProfile,
+)
 from rest_framework import serializers
 from django.core.validators import RegexValidator
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -12,81 +21,110 @@ from agora_token_builder import RtcTokenBuilder, RtmTokenBuilder
 
 import os
 
+
+def validate_phone_e164(value):
+    if not re.match(r"^\+[1-9]\d{7,14}$", value):
+        raise serializers.ValidationError(
+            "Numărul trebuie să fie în format internațional: +40712345678"
+        )
+    return value
+
+
 class TeacherAvailabilitySerializer(serializers.ModelSerializer):
     class Meta:
         model = TeacherAvailability
-        fields = ['day', 'start_time', 'end_time']
+        fields = ["day", "start_time", "end_time"]
 
-class UserSerializer(serializers.ModelSerializer):    
-  
+
+class UserSerializer(serializers.ModelSerializer):
+
     phone_number = serializers.CharField(
         required=False,
         allow_blank=True,
         validators=[
             RegexValidator(
-                regex=r'^\+?1?\d{9,15}$',
-                message="Phone number must be in format: '+999999999'. Up to 15 digits."
+                regex=r"^\+?1?\d{9,15}$",
+                message="Phone number must be in format: '+999999999'. Up to 15 digits.",
             )
-        ]
+        ],
     )
-    
+
     password = serializers.CharField(
         write_only=True,
         min_length=8,
-        error_messages={
-            "min_length": "Password must be at least 8 characters."
-        }
+        error_messages={"min_length": "Password must be at least 8 characters."},
     )
 
-    description = serializers.CharField(write_only=True, required=False, allow_blank=True)
-    teaching_module = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    description = serializers.CharField(
+        write_only=True, required=False, allow_blank=True
+    )
+    teaching_module = serializers.CharField(
+        write_only=True, required=False, allow_blank=True
+    )
 
     class Meta:
         model = User
-        fields = ["id", "first_name", "last_name", "username", "password", "email", "role", "phone_number", "description", "teaching_module"]
+        fields = [
+            "id",
+            "first_name",
+            "last_name",
+            "username",
+            "password",
+            "email",
+            "role",
+            "phone_number",
+            "description",
+            "teaching_module",
+        ]
         extra_kwargs = {
-            "role": {"required": False}, 
+            "role": {"required": False},
         }
 
     def create(self, validated_data):
-        role = validated_data.get('role', User.Role.PARENT)
-    
-        request = self.context.get('request')
+        role = validated_data.get("role", User.Role.PARENT)
+
+        request = self.context.get("request")
         if role == User.Role.ADMIN and not (request and request.user.is_superuser):
             role = User.Role.PARENT
 
-        phone_number = validated_data.pop('phone_number', None)
-        description = validated_data.pop('description', None)
-        teaching_module = validated_data.pop('teaching_module', None)
-    
-        validated_data['role'] = role  #
-        
-        if phone_number:
-            validated_data['phone_number'] = phone_number
+        phone_number = validated_data.pop("phone_number", None)
+        description = validated_data.pop("description", None)
+        teaching_module = validated_data.pop("teaching_module", None)
 
-        user = User.objects.create_user(**validated_data)  # create user with phone_number
+        validated_data["role"] = role  #
+
+        if phone_number:
+            validated_data["phone_number"] = phone_number
+
+        user = User.objects.create_user(
+            **validated_data
+        )  # create user with phone_number
 
         if role == User.Role.TEACHER:
-            TeacherProfile.objects.create(user=user, teaching_module=teaching_module, description=description)
+            TeacherProfile.objects.create(
+                user=user, teaching_module=teaching_module, description=description
+            )
         else:
-            ParentProfile.objects.create(user=user) # No phone_number field here anymore
+            ParentProfile.objects.create(
+                user=user
+            )  # No phone_number field here anymore
 
         return user
-    
-    def update(self, instance, validated_data):
-        request = self.context.get('request')
-        
-        if 'role' in validated_data and not request.user.is_superuser:
-            validated_data.pop('role')
 
-        password = validated_data.pop('password', None)
+    def update(self, instance, validated_data):
+        request = self.context.get("request")
+
+        if "role" in validated_data and not request.user.is_superuser:
+            validated_data.pop("role")
+
+        password = validated_data.pop("password", None)
         instance = super().update(instance, validated_data)
-        
+
         if password:
             instance.set_password(password)
             instance.save()
-        
-        return instance  
+
+        return instance
 
     def validate_username(self, value):
         if User.objects.filter(username=value).exists():
@@ -100,11 +138,15 @@ class UserSerializer(serializers.ModelSerializer):
 
     def validate_password(self, value):
         if not any(char.isdigit() for char in value):
-            raise serializers.ValidationError("Password must contain at least one number.")
+            raise serializers.ValidationError(
+                "Password must contain at least one number."
+            )
         if not any(char.isupper() for char in value):
-            raise serializers.ValidationError("Password must contain at least one uppercase letter.")
+            raise serializers.ValidationError(
+                "Password must contain at least one uppercase letter."
+            )
         return value
-    
+
     def validate_phone_number(self, value):
         if value and User.objects.filter(phone_number=value).exists():
             raise serializers.ValidationError("This phone number is already in use.")
@@ -115,31 +157,40 @@ class UserSerializer(serializers.ModelSerializer):
         token = super().get_token(user)
         token["role"] = user.role
         return token
-    
+
+
 class LessonSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lesson
         fields = "__all__"
         ordering = ["date_time"]
 
+
 class LessonJoinSerializer(serializers.ModelSerializer):
     agora_data = serializers.SerializerMethodField()
 
     class Meta:
         model = Lesson
-        fields = ['id', 'channel_name', 'date_time', 'agora_data', 'is_test_active',]
+        fields = [
+            "id",
+            "channel_name",
+            "date_time",
+            "agora_data",
+            "is_test_active",
+        ]
 
     def get_agora_data(self, obj):
 
         app_id = os.getenv("AGORA_APP_ID")
         app_certificate = os.getenv("AGORA_APP_CERTIFICATE")
-        
-        user = self.context['request'].user
-        uid = user.id 
-        
+
+        user = self.context["request"].user
+        uid = user.id
+
         if not app_id or not app_certificate:
-            raise ValueError("AGORA_APP_ID sau CERTIFICATE lipsesc! Verifică fișierul .env și setările Docker.")
-        
+            raise ValueError(
+                "AGORA_APP_ID sau CERTIFICATE lipsesc! Verifică fișierul .env și setările Docker."
+            )
 
         role = 1 if str(user.role).lower() == "teacher" else 2
 
@@ -156,48 +207,44 @@ class LessonJoinSerializer(serializers.ModelSerializer):
             app_id, app_certificate, channel_name, 0, role, privilege_expired_ts
         )
         rtm_token = RtmTokenBuilder.buildToken(
-            app_id, 
-            app_certificate, 
-            str(uid), 
-            1,        
-            privilege_expired_ts
+            app_id, app_certificate, str(uid), 1, privilege_expired_ts
         )
-        whiteboard_sdk_token = os.getenv("AGORA_WHITEBOARD_SDK_TOKEN") 
-        whiteboard_region = "eu" 
+        whiteboard_sdk_token = os.getenv("AGORA_WHITEBOARD_SDK_TOKEN")
+        whiteboard_region = "eu"
 
         headers = {
             "token": whiteboard_sdk_token,
             "Content-Type": "application/json",
-            "region": whiteboard_region
+            "region": whiteboard_region,
         }
-        
-        room_uuid = getattr(obj, 'whiteboard_uuid', None)
-        
+
+        room_uuid = getattr(obj, "whiteboard_uuid", None)
+
         if not room_uuid:
             room_response = requests.post(
-                "https://api.netless.link/v5/rooms", 
+                "https://api.netless.link/v5/rooms",
                 headers=headers,
-                json={"isRecord": False}
+                json={"isRecord": False},
             )
             if room_response.status_code == 201:
-                room_uuid = room_response.json().get('uuid')
-                obj.whiteboard_uuid = room_uuid 
+                room_uuid = room_response.json().get("uuid")
+                obj.whiteboard_uuid = room_uuid
                 obj.save()
-                
+
         board_token = None
         if room_uuid:
             token_response = requests.post(
                 f"https://api.netless.link/v5/tokens/rooms/{room_uuid}",
                 headers=headers,
-                json={"lifespan": 0, "role": "admin" if role == 1 else "writer"}
+                json={"lifespan": 0, "role": "admin" if role == 1 else "writer"},
             )
             if token_response.status_code == 201:
                 board_token = token_response.json()
-                
+
             participants = {}
             for student in obj.classroom.students.all():
                 participants[str(student.parent.user.id)] = student.full_name
-                
+
         return {
             "token": video_token,
             "rtm_token": rtm_token,
@@ -211,42 +258,58 @@ class LessonJoinSerializer(serializers.ModelSerializer):
                 "uuid": room_uuid,
                 "token": board_token,
                 "appIdentifier": os.getenv("AGORA_WHITEBOARD_APP_IDENTIFIER"),
-                "region": whiteboard_region
-            }}
+                "region": whiteboard_region,
+            },
+        }
+
 
 class ChildProfileBasicSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChildProfile
         fields = ["id", "full_name", "credits", "parent"]
-                
+
+
 class TeacherProfileBasicSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(source="user.first_name", read_only=True)
     last_name = serializers.CharField(source="user.last_name", read_only=True)
     availabilities = TeacherAvailabilitySerializer(many=True, read_only=True)
     booked_slots = serializers.SerializerMethodField()
     email = serializers.EmailField(source="user.email", read_only=True)
-    phone_number = serializers.CharField(source="user.phone_number", allow_blank=True, required=False)
+    phone_number = serializers.CharField(
+        source="user.phone_number", validators=[validate_phone_e164], required=False
+    )
 
     class Meta:
         model = TeacherProfile
-        fields = ["first_name", "last_name", "description", "teaching_module", "availabilities", "booked_slots", "profile_picture", "email", "phone_number",]
+        fields = [
+            "first_name",
+            "last_name",
+            "description",
+            "teaching_module",
+            "availabilities",
+            "booked_slots",
+            "profile_picture",
+            "email",
+            "phone_number",
+        ]
+
     def get_booked_slots(self, obj):
         from django.utils import timezone
+
         now = timezone.now()
-        
+
         future_lessons = Lesson.objects.filter(
-            classroom__teacher=obj, 
-            is_canceled=False, 
-            date_time__gte=now
+            classroom__teacher=obj, is_canceled=False, date_time__gte=now
         )
-        
+
         slots = []
         for lesson in future_lessons:
             local_date = timezone.localtime(lesson.date_time)
-            slots.append(local_date.strftime('%Y-%m-%d %H:%M'))
-            
+            slots.append(local_date.strftime("%Y-%m-%d %H:%M"))
+
         return slots
-        
+
+
 class ClassroomBasicSerializer(serializers.ModelSerializer):
     lessons = serializers.SerializerMethodField()
     students = ChildProfileBasicSerializer(many=True, read_only=True)
@@ -254,17 +317,27 @@ class ClassroomBasicSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Classroom
-        fields = ["id", "titlu","teacher" , "students", "schedule_day", "schedule_time", "is_canceled", "lessons", "classroom_type"]
+        fields = [
+            "id",
+            "titlu",
+            "teacher",
+            "students",
+            "schedule_day",
+            "schedule_time",
+            "is_canceled",
+            "lessons",
+            "classroom_type",
+        ]
 
     def get_lessons(self, obj):
         buffer_time = timezone.now() - timedelta(hours=1)
-        
+
         active_lessons = obj.lessons.filter(
-            is_canceled=False,
-            date_time__gte=buffer_time
+            is_canceled=False, date_time__gte=buffer_time
         ).order_by("date_time")
 
         return LessonSerializer(active_lessons, many=True).data
+
 
 class ChildProfileSerializer(serializers.ModelSerializer):
     classroom = serializers.SerializerMethodField()
@@ -277,16 +350,12 @@ class ChildProfileSerializer(serializers.ModelSerializer):
     def get_classroom(self, obj):
         if not obj.classroom:
             return None
-            
+
         custom_context = self.context.copy()
-        custom_context['current_child'] = obj
+        custom_context["current_child"] = obj
 
-        return ClassroomSerializer(
-            obj.classroom,
-            context=custom_context  
-        ).data
+        return ClassroomSerializer(obj.classroom, context=custom_context).data
 
-    
 
 class ClassroomSerializer(serializers.ModelSerializer):
     lessons = serializers.SerializerMethodField()
@@ -295,11 +364,21 @@ class ClassroomSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Classroom
-        fields = ['id', 'titlu', 'teacher', 'schedule_day', 'schedule_time', 'lessons', 'students', 'teacher', 'classroom_type'] 
+        fields = [
+            "id",
+            "titlu",
+            "teacher",
+            "schedule_day",
+            "schedule_time",
+            "lessons",
+            "students",
+            "teacher",
+            "classroom_type",
+        ]
 
     def get_lessons(self, obj):
-        current_child = self.context.get('current_child')
-        
+        current_child = self.context.get("current_child")
+
         lessons_query = obj.lessons.filter(is_canceled=False)
 
         if current_child:
@@ -307,21 +386,35 @@ class ClassroomSerializer(serializers.ModelSerializer):
                 Q(is_makeup=True) & ~Q(makeup_students=current_child)
             )
 
-        lessons_query = lessons_query.order_by('date_time')
+        lessons_query = lessons_query.order_by("date_time")
 
         return LessonSerializer(lessons_query, many=True).data
+
 
 class TeacherProfileSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(source="user.first_name", read_only=True)
     last_name = serializers.CharField(source="user.last_name", read_only=True)
     classrooms = ClassroomSerializer(many=True, read_only=True)
     email = serializers.EmailField(source="user.email", read_only=True)
-    phone_number = serializers.CharField( source="user.phone_number",allow_blank=True, required=False)
+    phone_number = serializers.CharField(
+        source="user.phone_number", validators=[validate_phone_e164], required=False
+    )
     availabilities = TeacherAvailabilitySerializer(many=True, read_only=True)
 
     class Meta:
         model = TeacherProfile
-        fields = ["first_name", "last_name", "description", "teaching_module", "classrooms", "availabilities", "profile_picture", "email", "phone_number",]
+        fields = [
+            "first_name",
+            "last_name",
+            "description",
+            "teaching_module",
+            "classrooms",
+            "availabilities",
+            "profile_picture",
+            "email",
+            "phone_number",
+        ]
+
 
 class ParentProfileSerializer(serializers.ModelSerializer):
     children = ChildProfileSerializer(many=True, read_only=True)
@@ -333,6 +426,7 @@ class ParentProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = ParentProfile
         fields = "__all__"
+
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod

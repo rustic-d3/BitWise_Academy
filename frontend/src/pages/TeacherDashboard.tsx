@@ -6,12 +6,13 @@ import api from "../api";
 import "../styles/dashboard.scss";
 import InfoCard, { type InfoCardData } from "../components/InfoCard";
 import type { Classroom, LessonWithClassroom } from "../Types";
+import InfoModal from "../components/InfoModal";
 
 export default function TeacherDashboard() {
   const role = getUserRole()?.toLowerCase() as "teacher";
-
   const [teacherData, setTeacherData] = useState<InfoCardData | null>(null);
   const [classrooms, setClassrooms] = useState<Classroom[]>([]);
+  const [modalMessage, setModalMessage] = useState<string | null>(null);
 
   useEffect(() => {
     async function getTeacherData() {
@@ -65,25 +66,54 @@ export default function TeacherDashboard() {
         new Date(a.date_time).getTime() - new Date(b.date_time).getTime(),
     );
 
+  const handleCall = async (studentId: number, lesson_id: number) => {
+    try {
+      const response = await api.post(
+        `api/lessons/${lesson_id}/call/${studentId}/`,
+      );
+      // Afișează mesajul de succes din backend
+      const message =
+        response.data?.status_message ||
+        response.data?.message ||
+        "Apelul a fost inițiat.";
+      setModalMessage(message);
+    } catch (error: any) {
+      // Afișează mesajul de eroare din backend
+      const message =
+        error.response?.data?.error ||
+        "A apărut o eroare la inițierea apelului.";
+      setModalMessage(message);
+    }
+  };
+
   return (
-    <div className="page-wrapper">
-      <Navbar role="teacher" />
-      <main className="main-content">
-        <div className="left-side-container">
-          <InfoCard data={teacherData} />
-        </div>
-        <div className="right-side-container">
-          <h2>Următoarele Sesiuni:</h2>
-          {allLessons.map((lesson) => (
-            <ClassSession
-              key={lesson.id}
-              role={role}
-              lesson={lesson}
-              onDelete={handleDeleteLesson}
-            />
-          ))}
-        </div>
-      </main>
-    </div>
+    <>
+      {modalMessage && (
+        <InfoModal
+          message={modalMessage}
+          onCancel={() => setModalMessage(null)}
+        />
+      )}
+      <div className="page-wrapper">
+        <Navbar role="teacher" />
+        <main className="main-content">
+          <div className="left-side-container">
+            <InfoCard data={teacherData} />
+          </div>
+          <div className="right-side-container">
+            <h2>Următoarele Sesiuni:</h2>
+            {allLessons.map((lesson) => (
+              <ClassSession
+                key={lesson.id}
+                role={role}
+                lesson={lesson}
+                onDelete={handleDeleteLesson}
+                onCall={handleCall}
+              />
+            ))}
+          </div>
+        </main>
+      </div>
+    </>
   );
 }

@@ -30,7 +30,6 @@ body {
     padding: 1.3em 2.6em;
     background-color: g.$primary-orange;
     color: g.$white;
-    
   }
 
   @media (min-width: v.$breakpoint-desktop) {
@@ -113,6 +112,14 @@ body {
     content: url("/logo.svg");
     font-size: 4rem;
     margin-bottom: 1rem;
+  }
+}
+
+.student-container {
+  .callButton {
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 }
 

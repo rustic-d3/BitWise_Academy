@@ -91,7 +91,15 @@ export default function ProfilePage() {
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
-    const { name, value } = e.target;
+    let { name, value } = e.target;
+
+    if (name === "phone_number") {
+      value = value.replace(/[^0-9+]/g, "");
+      if (value.startsWith("00")) value = "+" + value.slice(2);
+      else if (value.startsWith("07") || value.startsWith("02"))
+        value = "+4" + value;
+    }
+
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -106,6 +114,19 @@ export default function ProfilePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage(null);
+
+    if (formData.phone_number) {
+      // Expresia regulată: Începe cu +40, urmat de exact 9 cifre (0-9)
+      const phoneRegex = /^\+40\d{9}$/;
+
+      if (!phoneRegex.test(formData.phone_number)) {
+        setMessage({
+          type: "error",
+          text: "Numărul de telefon trebuie să fie în formatul corect: +407XXXXXXXX",
+        });
+        return; 
+      }
+    }
 
     const submitData = new FormData();
     if (formData.email) submitData.append("email", formData.email);
@@ -248,7 +269,11 @@ export default function ProfilePage() {
             </div>
 
             <div className="submit-btn-wrapper">
-              <button type="submit" className="btn--primary" data-cy="save-button">
+              <button
+                type="submit"
+                className="btn--primary"
+                data-cy="save-button"
+              >
                 Salvează Modificările
               </button>
             </div>

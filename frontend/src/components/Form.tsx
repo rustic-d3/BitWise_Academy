@@ -38,7 +38,7 @@ export default function Form({ form_type, route }: FormProps) {
       passwordError: "",
     };
 
-    // 1. validari comune
+    // 1. Validări COMUNE (se aplică și la Login, și la Register)
     if (!formData.username.trim()) {
       errors.usernameError = "Numele de utilizator este obligatoriu.";
     } else if (formData.username.trim().length < 3) {
@@ -50,7 +50,7 @@ export default function Form({ form_type, route }: FormProps) {
       errors.passwordError = "Parola este obligatorie.";
     }
 
-    // 2. Validări pentru register
+    // 2. Validări STRICT pentru Register
     if (isRegister) {
       if (!formData.first_name.trim())
         errors.firstNameError = "Prenumele este obligatoriu.";
@@ -58,15 +58,18 @@ export default function Form({ form_type, route }: FormProps) {
       if (!formData.last_name.trim())
         errors.lastNameError = "Numele este obligatoriu.";
 
-      if (!formData.email.trim())
+      if (!formData.email.trim()) {
         errors.emailError = "Email-ul este obligatoriu.";
-      else if (!/\S+@\S+\.\S+/.test(formData.email))
+      } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
         errors.emailError = "Formatul email-ului este invalid.";
+      }
 
-      if (!formData.phone_number.trim())
+      // Validarea telefonului este acum DOAR la register
+      if (!formData.phone_number.trim()) {
         errors.phoneNumberError = "Numărul de telefon este obligatoriu.";
-      else if (!/^\+?[\d]{9,15}$/.test(formData.phone_number))
-        errors.phoneNumberError = "Număr de telefon invalid.";
+      } else if (!/^\+[1-9]\d{7,14}$/.test(formData.phone_number)) {
+        errors.phoneNumberError = "Format incorect. Exemplu: +40712345678";
+      }
 
       // Validări complexe pentru parolă
       if (formData.password.trim()) {
@@ -87,10 +90,19 @@ export default function Form({ form_type, route }: FormProps) {
     setValidationErrors(errors);
     return !Object.values(errors).some(Boolean);
   }
+  const validatePhone = (phone: string): boolean => {
+    return /^\+[1-9]\d{7,14}$/.test(phone);
+  };
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setAuthError("");
+    if (formData.phone_number && !validatePhone(formData.phone_number)) {
+      setAuthError(
+        "Numărul de telefon trebuie să fie în format internațional: +40712345678",
+      );
+      return;
+    }
 
     if (!validateForm()) return;
     const loginData = {
@@ -222,13 +234,23 @@ export default function Form({ form_type, route }: FormProps) {
             <label>Phone Number</label>
             <input
               type="tel"
-              placeholder="Număr de telefon"
-              maxLength={12}
+              placeholder="+40712345678"
+              maxLength={13} // ← +40 + 9 cifre = 13 caractere
               value={formData.phone_number}
               onChange={(e) => {
-                const formattedValue = e.target.value.replace(/[^0-9+]/g, "");
-                updateField("phone_number", formattedValue);
+                let value = e.target.value.replace(/[^0-9+]/g, ""); // doar cifre și +
+
+                // Auto-formatare
+                if (value.startsWith("00")) {
+                  value = "+" + value.slice(2);
+                } else if (value.startsWith("07") || value.startsWith("02")) {
+                  value = "+4" + value;
+                }
+
+                updateField("phone_number", value);
               }}
+              pattern="^\+[1-9]\d{7,14}$"
+              title="Format: +40712345678"
               data-cy="phoneField"
             />
             {validationErrors.phoneNumberError && (

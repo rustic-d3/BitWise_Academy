@@ -12,6 +12,7 @@ interface Props {
   childId?: number;
   onSkip?: (lessonId: number) => void;
   onDelete?: (id: number) => void;
+  onCall?: (studentId: number, lesson_id: number) => void;
 }
 
 const CheckIcon = () => (
@@ -31,13 +32,15 @@ const CheckIcon = () => (
   </svg>
 );
 
-const BellIcon = () => (
+const BellIcon = ({ onClick }: { onClick?: () => void }) => (
   <svg
     width="10"
     height="12"
     viewBox="0 0 10 12"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
+    onClick={onClick}
+    style={{ cursor: "pointer" }}
   >
     <path
       d="M1.38155 3.45386C1.38155 1.54635 2.9279 0 4.83541 0C6.74291 0 8.28927 1.54635 8.28927 3.45386V5.52618L9.67082 6.90773V8.28927H0V6.90773L1.38155 5.52618V3.45386Z"
@@ -56,6 +59,7 @@ export default function ClassSession({
   childId,
   onSkip,
   onDelete,
+  onCall,
 }: Props) {
   const [showSkipConfirm, setShowSkipConfirm] = useState(false);
   const [showUploadTest, setShowUploadTest] = useState(false);
@@ -215,7 +219,9 @@ export default function ClassSession({
                     {student.full_name} {hasSkipped && "(Skipped)"}
                   </p>
 
-                  {role === "teacher" && !hasSkipped && <BellIcon />}
+                  {role === "teacher" && !hasSkipped && (
+                    <BellIcon onClick={() => onCall?.(student.id, lesson.id)} />
+                  )}
                 </div>
               );
             })}
