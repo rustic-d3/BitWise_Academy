@@ -22,8 +22,8 @@ interface Props {
 
 const MicIcon = ({ active }: { active: boolean }) => (
   <svg
-    width="18"
-    height="18"
+    width="13"
+    height="13"
     viewBox="0 0 24 24"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
@@ -69,8 +69,8 @@ const MicIcon = ({ active }: { active: boolean }) => (
 
 const CameraIcon = ({ active }: { active: boolean }) => (
   <svg
-    width="18"
-    height="18"
+    width="13"
+    height="13"
     viewBox="0 0 24 24"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
@@ -93,8 +93,8 @@ const CameraIcon = ({ active }: { active: boolean }) => (
 
 const ScreenShareIcon = ({ active }: { active: boolean }) => (
   <svg
-    width="18"
-    height="18"
+    width="13"
+    height="13"
     viewBox="0 0 24 24"
     fill="none"
     stroke="white"
@@ -111,6 +111,27 @@ const ScreenShareIcon = ({ active }: { active: boolean }) => (
   </svg>
 );
 
+const CameraOffAvatar = () => (
+  <div className="camera-off-overlay">
+    <svg
+      width="30"
+      height="45"
+      viewBox="0 0 30 45"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M15 23.2207C21.4113 23.2207 26.6094 18.0226 26.6094 11.6103C26.6094 5.19994 21.4113 0 15 0C8.58785 0 3.39062 5.19994 3.39062 11.6103C3.39062 18.0226 8.58785 23.2207 15 23.2207Z"
+        fill="#FF6116"
+      />
+      <path
+        d="M29.868 34.4059C29.3497 31.3011 26.7171 27.0093 24.8308 25.0002C24.3207 24.4565 23.435 24.6826 23.1238 24.8753C20.7571 26.3345 17.979 27.1858 14.9999 27.1858C12.021 27.1858 9.24283 26.3345 6.8762 24.8753C6.56506 24.6826 5.67932 24.4565 5.16906 25.0002C3.28293 27.0093 0.650402 31.3011 0.132001 34.4059C-1.14164 42.0501 7.02464 44.812 15 44.812C22.9754 44.812 31.1417 42.0501 29.868 34.4059Z"
+        fill="#FF6116"
+      />
+    </svg>
+  </div>
+);
+
 export default function VideoComponent({
   config,
   lessonId,
@@ -121,6 +142,9 @@ export default function VideoComponent({
   const [localVideoTrack, setLocalVideoTrack] =
     useState<ICameraVideoTrack | null>(null);
   const [remoteUsers, setRemoteUsers] = useState<IAgoraRTCRemoteUser[]>([]);
+  const [cameraOffUsers, setCameraOffUsers] = useState<Set<string | number>>(
+    new Set(),
+  );
   const [hoveredUid, setHoveredUid] = useState<string | number | null>(null);
   const [cameraOn, setCameraOn] = useState(true);
   const [micOn, setMicOn] = useState(true);
@@ -130,7 +154,6 @@ export default function VideoComponent({
   const localVideoTrackRef = useRef<ICameraVideoTrack | null>(null);
   const localAudioTrackRef = useRef<any>(null);
   const screenTrackRef = useRef<any>(null);
-
   const localVideoRef = useRef<HTMLDivElement>(null);
   const teacherVideoRef = useRef<HTMLDivElement | null>(null);
   const teacherVideoTrackRef = useRef<any>(null);
@@ -170,8 +193,6 @@ export default function VideoComponent({
     const setupCall = async () => {
       try {
         client.on("user-published", async (user, mediaType) => {
-          // Daca UID-ul este chiar ecranul userului curent (UID-ul local + 100.000)
-          // se va ignora complet ca sa nu se vada ecranul dublu jos în lista
           const myScreenUid = Number(config.uid) + 100000;
           if (user.uid === myScreenUid) return;
 
@@ -181,7 +202,6 @@ export default function VideoComponent({
             return;
           }
 
-          // regula pentru ecranele celorlalți (Orice UID >= 100.000)
           if (Number(user.uid) >= 100000) {
             setIsSomeoneElseSharing(true);
             if (mediaType === "video" && onScreenTrackChange) {
@@ -190,28 +210,43 @@ export default function VideoComponent({
             return;
           }
 
-          // Funcționalitatea normala pentru camerele web
           if (mediaType === "video") {
             videoTracksRef.current[user.uid] = user.videoTrack;
+
+            // Userul și-a reactivat camera — scoate-l din cameraOffUsers
+            setCameraOffUsers((prev) => {
+              const next = new Set(prev);
+              next.delete(user.uid);
+              return next;
+            });
+
             if (user.uid === teacherUid) {
               teacherVideoTrackRef.current = user.videoTrack;
             }
+
             setRemoteUsers((prev) =>
               prev.find((u) => u.uid === user.uid) ? prev : [...prev, user],
             );
           }
+
           if (mediaType === "audio") {
             user.audioTrack?.play();
           }
         });
 
-        client.on("user-unpublished", (user) => {
+        client.on("user-unpublished", (user, mediaType) => {
           if (Number(user.uid) >= 100000 && onScreenTrackChange) {
             setIsSomeoneElseSharing(false);
             onScreenTrackChange(null);
             return;
           }
-          setRemoteUsers((prev) => prev.filter((u) => u.uid !== user.uid));
+
+          if (mediaType === "video") {
+            // Nu scoate userul din listă — doar marchează-l ca fără cameră
+            delete videoTracksRef.current[user.uid];
+            if (user.uid === teacherUid) teacherVideoTrackRef.current = null;
+            setCameraOffUsers((prev) => new Set(prev).add(user.uid));
+          }
         });
 
         client.on("user-left", (user) => {
@@ -220,11 +255,17 @@ export default function VideoComponent({
             onScreenTrackChange(null);
             return;
           }
+
           delete videoTracksRef.current[user.uid];
-          if (user.uid === teacherUid) {
-            teacherVideoTrackRef.current = null;
-          }
+          if (user.uid === teacherUid) teacherVideoTrackRef.current = null;
+
+          // La leave, scoate-l din ambele
           setRemoteUsers((prev) => prev.filter((u) => u.uid !== user.uid));
+          setCameraOffUsers((prev) => {
+            const next = new Set(prev);
+            next.delete(user.uid);
+            return next;
+          });
         });
 
         await client.join(
@@ -248,7 +289,6 @@ export default function VideoComponent({
         localVideoTrackRef.current = videoTrack;
         localAudioTrackRef.current = audioTrack;
         setLocalVideoTrack(videoTrack);
-
         await client.publish([audioTrack, videoTrack]);
       } catch (err) {
         console.error("Error during setup:", err);
@@ -261,11 +301,7 @@ export default function VideoComponent({
       isActive = false;
       localVideoTrackRef.current?.close();
       localAudioTrackRef.current?.close();
-
-      if (screenTrackRef.current) {
-        screenTrackRef.current.close();
-      }
-
+      if (screenTrackRef.current) screenTrackRef.current.close();
       client.removeAllListeners();
       client.leave();
       screenClient.leave();
@@ -299,13 +335,10 @@ export default function VideoComponent({
         const screenResult = await AgoraRTC.createScreenVideoTrack({
           encoderConfig: "1080p_1",
         });
-
         const screenVideoTrack = Array.isArray(screenResult)
           ? screenResult[0]
           : screenResult;
-
         screenTrackRef.current = screenVideoTrack;
-
         const screenUid = Number(config.uid) + 100000;
         await screenClient.join(
           config.appId,
@@ -313,12 +346,9 @@ export default function VideoComponent({
           config.token,
           screenUid,
         );
-
         await screenClient.publish(screenResult);
-
         setIsScreenSharing(true);
         if (onScreenTrackChange) onScreenTrackChange(screenVideoTrack);
-
         screenVideoTrack.on("track-ended", async () => {
           await screenClient.leave();
           setIsScreenSharing(false);
@@ -331,24 +361,60 @@ export default function VideoComponent({
     }
   };
 
+  const Controls = () => (
+    <div className="video-controls">
+      <button
+        className={`control-btn ${!micOn ? "control-btn--off" : ""}`}
+        onClick={toggleMic}
+        title={micOn ? "Dezactivează microfonul" : "Activează microfonul"}
+      >
+        <MicIcon active={micOn} />
+      </button>
+      <button
+        className={`control-btn ${!cameraOn ? "control-btn--off" : ""}`}
+        onClick={toggleCamera}
+        title={cameraOn ? "Dezactivează camera" : "Activează camera"}
+      >
+        <CameraIcon active={cameraOn} />
+      </button>
+      <button
+        className={`control-btn ${isScreenSharing ? "control-btn--off" : ""}`}
+        onClick={toggleScreenShare}
+        title={isScreenSharing ? "Oprește partajarea" : "Partajează ecranul"}
+        disabled={!isScreenSharing && isSomeoneElseSharing}
+        style={{ opacity: !isScreenSharing && isSomeoneElseSharing ? 0.5 : 1 }}
+      >
+        <ScreenShareIcon active={!isScreenSharing} />
+      </button>
+    </div>
+  );
+
   return (
     <div className="main-container--video">
+      {/* TEACHER VIDEO */}
       <div
         className="teacher-video-container video-hover-wrapper"
         onMouseEnter={() => setHoveredUid(teacherUid)}
         onMouseLeave={() => setHoveredUid(null)}
       >
         {isCurrentUserTeacher ? (
-          <div ref={localVideoRef} style={{ width: "100%", height: "100%" }}>
-            {!localVideoTrack && <p>Se încarcă camera...</p>}
-          </div>
+          <>
+            <div ref={localVideoRef} style={{ width: "100%", height: "100%" }}>
+              {!localVideoTrack && <p>Se încarcă camera...</p>}
+            </div>
+            {!cameraOn && <CameraOffAvatar />}
+            <Controls />
+          </>
         ) : (
           <>
             <div
               style={{
                 width: "100%",
                 height: "100%",
-                display: teacherRemote ? "block" : "none",
+                display:
+                  teacherRemote && !cameraOffUsers.has(teacherUid)
+                    ? "block"
+                    : "none",
               }}
               ref={(node) => {
                 teacherVideoRef.current = node;
@@ -357,6 +423,10 @@ export default function VideoComponent({
                 }
               }}
             />
+            {/* Avatar profesor când camera e oprită */}
+            {teacherRemote && cameraOffUsers.has(teacherUid) && (
+              <CameraOffAvatar />
+            )}
             {!teacherRemote && <p>Profesorul nu s-a conectat încă...</p>}
           </>
         )}
@@ -370,6 +440,7 @@ export default function VideoComponent({
         )}
       </div>
 
+      {/* STUDENT VIDEOS */}
       <div className="children-video-container">
         {!isCurrentUserTeacher && (
           <div
@@ -380,6 +451,8 @@ export default function VideoComponent({
             <div ref={localVideoRef} style={{ width: "100%", height: "100%" }}>
               {!localVideoTrack && <p>Se încarcă camera...</p>}
             </div>
+            {!cameraOn && <CameraOffAvatar />}
+            <Controls />
             {hoveredUid === config.uid && (
               <div className="video-name-tag">
                 {getParticipantName(config.uid)} (Tu)
@@ -395,8 +468,13 @@ export default function VideoComponent({
             onMouseEnter={() => setHoveredUid(user.uid)}
             onMouseLeave={() => setHoveredUid(null)}
           >
+            {/* Video track — ascuns când camera e oprită */}
             <div
-              style={{ width: "100%", height: "100%" }}
+              style={{
+                width: "100%",
+                height: "100%",
+                display: cameraOffUsers.has(user.uid) ? "none" : "block",
+              }}
               ref={(node) => {
                 remoteVideoRefs.current[user.uid] = node;
                 if (node && videoTracksRef.current[user.uid]) {
@@ -404,6 +482,9 @@ export default function VideoComponent({
                 }
               }}
             />
+            {/* Avatar când camera e oprită */}
+            {cameraOffUsers.has(user.uid) && <CameraOffAvatar />}
+
             {hoveredUid === user.uid && (
               <div className="video-name-tag">
                 {getParticipantName(user.uid)}
@@ -411,39 +492,6 @@ export default function VideoComponent({
             )}
           </div>
         ))}
-      </div>
-
-      <div className="video-controls">
-        <button
-          className={`control-btn ${!micOn ? "control-btn--off" : ""}`}
-          onClick={toggleMic}
-          title={micOn ? "Dezactivează microfonul" : "Activează microfonul"}
-        >
-          <MicIcon active={micOn} />
-        </button>
-        <button
-          className={`control-btn ${!cameraOn ? "control-btn--off" : ""}`}
-          onClick={toggleCamera}
-          title={cameraOn ? "Dezactivează camera" : "Activează camera"}
-        >
-          <CameraIcon active={cameraOn} />
-        </button>
-
-        <button
-          className={`control-btn ${isScreenSharing ? "control-btn--off" : ""}`}
-          onClick={toggleScreenShare}
-          title={isScreenSharing ? "Oprește partajarea" : "Partajează ecranul"}
-          disabled={!isScreenSharing && isSomeoneElseSharing} // <--- BLOCĂM BUTONUL
-          style={{
-            opacity: !isScreenSharing && isSomeoneElseSharing ? 0.5 : 1,
-            cursor:
-              !isScreenSharing && isSomeoneElseSharing
-                ? "not-allowed"
-                : "pointer",
-          }}
-        >
-          <ScreenShareIcon active={!isScreenSharing} />
-        </button>
       </div>
     </div>
   );

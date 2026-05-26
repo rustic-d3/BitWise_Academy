@@ -365,7 +365,7 @@ export default function ClassSession({
             <button
               className="btn--primary"
               onClick={handleJoin}
-              disabled={!isToday} // in development trebuie pus asta aici, momentan doar il comentez
+              //disabled={!isToday} // in development trebuie pus asta aici, momentan doar il comentez
             >
               <svg
                 width="10"

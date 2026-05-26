@@ -42,9 +42,10 @@
   height: 100%;
 }
 
+// ─── Name tag ─────────────────────────────────────────
 .video-name-tag {
   position: absolute;
-  bottom: 10px;
+  top: 10px;
   left: 10px;
   background: rgba(0, 0, 0, 0.6);
   color: white;
@@ -56,19 +57,46 @@
   backdrop-filter: blur(4px);
 }
 
-.video-controls {
+// ─── Camera off avatar overlay ────────────────────────
+.camera-off-overlay {
+  position: absolute;
+  inset: 0;
+  background: #1a1a1a;
   display: flex;
-  gap: 12px;
+  align-items: center;
   justify-content: center;
-  padding: 6px 0;
+  z-index: 5;
+  pointer-events: none;
 }
 
+// ─── Controls — hidden by default, show on hover ──────
+.video-controls {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  z-index: 20;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+// Afișează controalele la hover pe containerul video
+.video-hover-wrapper:hover .video-controls {
+  opacity: 1;
+  pointer-events: all;
+}
+
+// ─── Control buttons ──────────────────────────────────
 .control-btn {
-  width: 44px;
-  height: 44px;
+  width: 30px;     
+  height: 30px;
   border-radius: 50%;
   border: none;
-  background: #333;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -76,15 +104,20 @@
   transition: background 0.2s;
 
   &:hover {
-    background: #555;
+    background: rgba(0, 0, 0, 0.85);
   }
 
   &--off {
-    background: #1a1a1a;
+    background: rgba(0, 0, 0, 0.65);
     outline: 2px solid #ff4444;
 
     &:hover {
-      background: #2a2a2a;
+      background: rgba(0, 0, 0, 0.85);
     }
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
   }
 }
