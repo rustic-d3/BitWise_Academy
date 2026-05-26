@@ -311,7 +311,6 @@ class TeacherProfileBasicSerializer(serializers.ModelSerializer):
 
 
 class ClassroomBasicSerializer(serializers.ModelSerializer):
-    lessons = serializers.SerializerMethodField()
     students = ChildProfileBasicSerializer(many=True, read_only=True)
     teacher = TeacherProfileBasicSerializer(read_only=True)
 
@@ -325,18 +324,8 @@ class ClassroomBasicSerializer(serializers.ModelSerializer):
             "schedule_day",
             "schedule_time",
             "is_canceled",
-            "lessons",
             "classroom_type",
         ]
-
-    def get_lessons(self, obj):
-        buffer_time = timezone.now() - timedelta(hours=1)
-
-        active_lessons = obj.lessons.filter(
-            is_canceled=False, date_time__gte=buffer_time
-        ).order_by("date_time")
-
-        return LessonSerializer(active_lessons, many=True).data
 
 
 class ChildProfileSerializer(serializers.ModelSerializer):
@@ -358,7 +347,6 @@ class ChildProfileSerializer(serializers.ModelSerializer):
 
 
 class ClassroomSerializer(serializers.ModelSerializer):
-    lessons = serializers.SerializerMethodField()
     students = ChildProfileBasicSerializer(many=True, read_only=True)
     teacher = TeacherProfileBasicSerializer(read_only=True)
 
@@ -370,31 +358,15 @@ class ClassroomSerializer(serializers.ModelSerializer):
             "teacher",
             "schedule_day",
             "schedule_time",
-            "lessons",
             "students",
             "teacher",
             "classroom_type",
         ]
 
-    def get_lessons(self, obj):
-        current_child = self.context.get("current_child")
-
-        lessons_query = obj.lessons.filter(is_canceled=False)
-
-        if current_child:
-            lessons_query = lessons_query.exclude(
-                Q(is_makeup=True) & ~Q(makeup_students=current_child)
-            )
-
-        lessons_query = lessons_query.order_by("date_time")
-
-        return LessonSerializer(lessons_query, many=True).data
-
 
 class TeacherProfileSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(source="user.first_name", read_only=True)
     last_name = serializers.CharField(source="user.last_name", read_only=True)
-    classrooms = ClassroomSerializer(many=True, read_only=True)
     email = serializers.EmailField(source="user.email", read_only=True)
     phone_number = serializers.CharField(
         source="user.phone_number", validators=[validate_phone_e164], required=False
@@ -408,7 +380,6 @@ class TeacherProfileSerializer(serializers.ModelSerializer):
             "last_name",
             "description",
             "teaching_module",
-            "classrooms",
             "availabilities",
             "profile_picture",
             "email",
