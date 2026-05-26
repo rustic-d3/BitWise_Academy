@@ -5,6 +5,7 @@ from django.db import transaction
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404
 from google import genai
+from django.db.models import Q
 
 from django.core.mail import send_mail
 import threading
@@ -348,6 +349,42 @@ class LessonJoinView(RetrieveAPIView):
     serializer_class = LessonJoinSerializer
     permission_classes = [IsAuthenticated]
     lookup_field = "id"
+
+
+class ChildLessonsView(generics.ListAPIView):
+    serializer_class = PaginatedLessonSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = LessonPagination
+
+    def get_queryset(self):
+        # 1. Extragem ID-ul copilului din URL
+        child_id = self.kwargs["child_id"]
+
+        try:
+            # 2. Securitate: Găsim copilul doar dacă aparține părintelui autentificat
+            child = ChildProfile.objects.get(
+                id=child_id, parent__user=self.request.user
+            )
+        except ChildProfile.DoesNotExist:
+            # Dacă copilul nu există sau nu e al lui, returnăm o listă goală
+            return Lesson.objects.none()
+
+        # 3. Dacă copilul nu este alocat încă unei clase, nu are lecții
+        if not child.classroom:
+            return Lesson.objects.none()
+
+        # 4. Extragem lecțiile active ale clasei
+        lessons = Lesson.objects.filter(classroom=child.classroom, is_canceled=False)
+
+        # 5. Logica pentru recuperări: Excludem lecțiile de makeup unde copilul NU este în makeup_students
+        lessons = lessons.exclude(Q(is_makeup=True) & ~Q(makeup_students=child))
+
+        # 6. Optimizăm interogarea și ordonăm cronologic
+        return (
+            lessons.select_related("classroom")
+            .prefetch_related("classroom__students", "makeup_students")
+            .order_by("date_time")
+        )
 
 
 class LessonDeleteView(APIView):

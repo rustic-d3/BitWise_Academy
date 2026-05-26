@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.urls import path, include
 from api.views import (
+    ChildLessonsView,
     ChildProfileCreateView,
     ChildProfileUpdateView,
     ChildProfileView,
@@ -81,6 +82,11 @@ urlpatterns = [
         "api/child/<int:id>/update/",
         ChildProfileUpdateView.as_view(),
         name="child_update",
+    ),
+    path(
+        "api/child/<int:child_id>/lessons/",
+        ChildLessonsView.as_view(),
+        name="child-lessons",
     ),
     # clasrooms/lessons urls
     path(

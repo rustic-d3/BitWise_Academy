@@ -449,6 +449,7 @@ class PaginatedLessonSerializer(serializers.ModelSerializer):
             "classroom",
             "lesson_material_text",
             "makeup_students",
+            "skipped_by",
         ]
 
 
