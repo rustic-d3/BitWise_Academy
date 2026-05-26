@@ -103,6 +103,10 @@ export default function ClassSession({
   const navigate = useNavigate();
   const [showNoCreditsModal, setShowNoCreditsModal] = useState(false);
   const [isGlitchOpen, setIsGlitchOpen] = useState(false);
+  const studentsToDisplay =
+    lesson.is_makeup && lesson.makeup_students
+      ? lesson.makeup_students
+      : lesson.classroom.students;
   const date = new Date(lesson.date_time).toLocaleString("ro-RO", {
     weekday: "short",
     day: "numeric",
@@ -242,7 +246,7 @@ export default function ClassSession({
             )}
           </div>
           <div className="col-2">
-            {lesson?.classroom?.students?.map((student) => {
+            {studentsToDisplay.map((student) => {
               // Verificăm dacă ID-ul acestui student se află în lista celor care au dat skip
               const hasSkipped = lesson.skipped_by?.includes(student.id);
 
@@ -361,7 +365,7 @@ export default function ClassSession({
             <button
               className="btn--primary"
               onClick={handleJoin}
-              // disabled={!isToday} // in development trebuie pus asta aici, momentan doar il comentez
+              disabled={!isToday} // in development trebuie pus asta aici, momentan doar il comentez
             >
               <svg
                 width="10"

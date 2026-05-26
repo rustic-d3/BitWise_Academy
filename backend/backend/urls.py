@@ -20,6 +20,7 @@ from api.views import (
     PasswordResetRequestView,
     StartTestView,
     SubmitTestView,
+    TeacherLessonsView,
     TeacherProfileView,
     ParentProfileView,
     CreateClassroomView,
@@ -62,6 +63,9 @@ urlpatterns = [
         "api/teacher/profile-settings",
         TeacherProfileView.as_view(),
         name="teacher-profile",
+    ),
+    path(
+        "api/teacher/get_lessons/", TeacherLessonsView.as_view(), name="teacher-lessons"
     ),
     # parent urls
     path("api/parent/profile", ParentProfileView.as_view(), name="parent_profile"),

@@ -11,7 +11,7 @@ export interface Lesson {
   is_canceled: boolean;
   skipped_by: number[];
   is_makeup?: boolean;
-  makeup_students?: number[];
+  makeup_students?: Student[];
 }
 
 export interface Classroom {

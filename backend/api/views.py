@@ -13,7 +13,9 @@ from django.utils.encoding import force_bytes, force_str
 import os
 from twilio.rest import Client
 from twilio.base.exceptions import TwilioRestException
-import phonenumbers  # pip install phonenumbers
+import phonenumbers
+
+from api.pagination import LessonPagination
 
 from .supabase_client import upload_profile_picture
 
@@ -41,6 +43,7 @@ from .serializers import (
     ClassroomSerializer,
     LessonJoinSerializer,
     LessonSerializer,
+    PaginatedLessonSerializer,
     ParentProfileSerializer,
     TeacherProfileSerializer,
     UserSerializer,
@@ -212,6 +215,21 @@ class TeacherProfileView(generics.RetrieveUpdateAPIView):
 
         return Response(
             TeacherProfileSerializer(profile).data, status=status.HTTP_200_OK
+        )
+
+
+class TeacherLessonsView(generics.ListAPIView):
+    serializer_class = PaginatedLessonSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = LessonPagination
+
+    def get_queryset(self):
+        # Tragem lecțiile, clasa atașată și copiii din acea clasă dintr-un singur foc
+        return (
+            Lesson.objects.filter(classroom__teacher__user=self.request.user)
+            .select_related("classroom")
+            .prefetch_related("classroom__students", "makeup_students")
+            .order_by("date_time")
         )
 
 

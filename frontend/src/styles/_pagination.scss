@@ -1,0 +1,58 @@
+@use "variables" as v;
+@use "global" as g;
+
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: v.$spacing-md;
+  margin-top: v.$spacing-xl;
+  padding-top: v.$spacing-md;
+  border-top: 1px solid g.$gray-light; // O linie fină care o desparte de sesiuni
+
+  .pagination-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: v.$font-size-input;
+    color: g.$text-dark;
+    background-color: g.$white;
+    padding: 8px 16px;
+    border-radius: v.$border-radius-sm;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border: 1px solid g.$gray-light;
+
+    .current-page {
+      font-weight: 700;
+      color: g.$primary-orange; // Scoatem în evidență pagina curentă
+    }
+
+    .total-pages {
+      font-weight: 600;
+    }
+  }
+
+  // Ajustări pentru butoane dacă sunt dezactivate
+  button {
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      pointer-events: none; // Previne hover-ul când e disabled
+    }
+  }
+
+  // Responsivitate pentru mobil
+  @media (max-width: v.$breakpoint-mobile) {
+    flex-direction: column;
+    gap: v.$spacing-sm;
+
+    button {
+      width: 100%;
+    }
+
+    .pagination-info {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+}

@@ -416,6 +416,42 @@ class TeacherProfileSerializer(serializers.ModelSerializer):
         ]
 
 
+class MinimalClassroomForLessonSerializer(serializers.ModelSerializer):
+    # Refolosim serializatorul tău existent pentru copii!
+    students = ChildProfileBasicSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Classroom
+        fields = [
+            "id",
+            "titlu",
+            "students",
+            "schedule_day",
+            "schedule_time",
+            "classroom_type",
+        ]
+
+
+class PaginatedLessonSerializer(serializers.ModelSerializer):
+    classroom = MinimalClassroomForLessonSerializer(read_only=True)
+
+    makeup_students = ChildProfileBasicSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Lesson
+        fields = [
+            "id",
+            "date_time",
+            "channel_name",
+            "is_canceled",
+            "is_makeup",
+            "is_test_active",
+            "classroom",
+            "lesson_material_text",
+            "makeup_students",
+        ]
+
+
 class ParentProfileSerializer(serializers.ModelSerializer):
     children = ChildProfileSerializer(many=True, read_only=True)
     first_name = serializers.CharField(source="user.first_name", read_only=True)
