@@ -172,7 +172,7 @@ export default function TestComponent({
 
   // ECRANUL DE REZULTAT FINAL PENTRU ELEV
   if (submitted && result) {
-    const percent = result.score;
+    const percent = Math.round((result.score / result.total) * 100);
     return (
       <div className="test-result">
         <div className="result-circle">

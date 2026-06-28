@@ -90,19 +90,11 @@ export default function Form({ form_type, route }: FormProps) {
     setValidationErrors(errors);
     return !Object.values(errors).some(Boolean);
   }
-  const validatePhone = (phone: string): boolean => {
-    return /^\+[1-9]\d{7,14}$/.test(phone);
-  };
+  
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setAuthError("");
-    if (formData.phone_number && !validatePhone(formData.phone_number)) {
-      setAuthError(
-        "Numărul de telefon trebuie să fie în format internațional: +40712345678",
-      );
-      return;
-    }
 
     if (!validateForm()) return;
     const loginData = {

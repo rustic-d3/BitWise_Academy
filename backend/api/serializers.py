@@ -81,33 +81,37 @@ class UserSerializer(serializers.ModelSerializer):
         }
 
     def create(self, validated_data):
-        role = validated_data.get("role", User.Role.PARENT)
-
         request = self.context.get("request")
-        if role == User.Role.ADMIN and not (request and request.user.is_superuser):
-            role = User.Role.PARENT
 
+        # SECURITATE: Forțăm rolul de PARENT (Părinte) pentru orice înregistrare publică
+        role = User.Role.PARENT
+
+        # Doar un administrator autentificat (Superuser) poate atribui un alt rol (ex. TEACHER)
+        if request and request.user and request.user.is_superuser:
+            role = validated_data.get("role", User.Role.PARENT)
+
+        # Curățăm payload-ul pentru a ignora orice încercare de manipulare a rolului din frontend
+        validated_data.pop("role", None)
+        validated_data["role"] = role
+
+        # Extragem atributele care aparțin profilelor extinse
         phone_number = validated_data.pop("phone_number", None)
         description = validated_data.pop("description", None)
         teaching_module = validated_data.pop("teaching_module", None)
 
-        validated_data["role"] = role  #
-
         if phone_number:
             validated_data["phone_number"] = phone_number
 
-        user = User.objects.create_user(
-            **validated_data
-        )  # create user with phone_number
+        # Instanțiem utilizatorul de bază
+        user = User.objects.create_user(**validated_data)
 
+        # Creăm automat entitățile relaționale corecte
         if role == User.Role.TEACHER:
             TeacherProfile.objects.create(
                 user=user, teaching_module=teaching_module, description=description
             )
-        else:
-            ParentProfile.objects.create(
-                user=user
-            )  # No phone_number field here anymore
+        elif role == User.Role.PARENT:
+            ParentProfile.objects.create(user=user)
 
         return user
 

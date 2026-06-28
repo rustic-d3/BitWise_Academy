@@ -4,17 +4,17 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils.translation import gettext_lazy as _
 
-class ClassroomSubjects(models.TextChoices):
-        M1 = "M1 | Alfabetizare Digitală", _("M1")
-        M2 = "M2 | Introducere În Programare", _("M2")
-        M3 = "M3 | Programare Distractivă", _("M3")
-        M4 = "M4 | Unity - C#", _("M4")
-        M5 = "M5 | Arduino - Sisteme Încorporate", _("M5")
-        M6 = "M6 | LUA - Roblox Studio", _("M6")
-        M7 = "M7 | Game Design - Începător", _("M7")
-        M8 = "M8 | Game Design - Intermediar", _("M8")
-        M9 = "M9 | Game Design - Avansat", _("M9")
 
+class ClassroomSubjects(models.TextChoices):
+    M1 = "M1 | Alfabetizare Digitală", _("M1")
+    M2 = "M2 | Introducere În Programare", _("M2")
+    M3 = "M3 | Programare Distractivă", _("M3")
+    M4 = "M4 | Unity - C#", _("M4")
+    M5 = "M5 | Arduino - Sisteme Încorporate", _("M5")
+    M6 = "M6 | LUA - Roblox Studio", _("M6")
+    M7 = "M7 | Game Design - Începător", _("M7")
+    M8 = "M8 | Game Design - Intermediar", _("M8")
+    M9 = "M9 | Game Design - Avansat", _("M9")
 
 
 class User(AbstractUser):
@@ -28,7 +28,9 @@ class User(AbstractUser):
 
 
 class TeacherProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="teacher_profile")
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name="teacher_profile"
+    )
     description = models.TextField(max_length=200, null=True, blank=True)
     teaching_module = models.CharField(
         max_length=150,
@@ -37,6 +39,7 @@ class TeacherProfile(models.Model):
         blank=True,
     )
     profile_picture = models.CharField(max_length=500, blank=True, null=True)
+
     class Meta:
         verbose_name = "Teacher"
         verbose_name_plural = "Teachers"
@@ -53,8 +56,11 @@ class TeacherProfile(models.Model):
 
 
 class ParentProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="parent_profile")
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name="parent_profile"
+    )
     profile_picture = models.CharField(max_length=500, blank=True, null=True)
+
     class Meta:
         verbose_name = "Parent"
         verbose_name_plural = "Parents"
@@ -64,7 +70,9 @@ class ParentProfile(models.Model):
 
 
 class ChildProfile(models.Model):
-    parent = models.ForeignKey(ParentProfile, on_delete=models.CASCADE, related_name="children")
+    parent = models.ForeignKey(
+        ParentProfile, on_delete=models.CASCADE, related_name="children"
+    )
     classroom = models.ForeignKey(
         "Classroom",
         on_delete=models.SET_NULL,
@@ -75,25 +83,30 @@ class ChildProfile(models.Model):
     credits = models.PositiveIntegerField(default=0)
     full_name = models.CharField(max_length=50, null=True)
     age = models.IntegerField(null=True, blank=True)
+
     class Meta:
         verbose_name = "Child"
         verbose_name_plural = "Children"
-    
-    
+
     def update_classroom(self, new_classroom):
         self.classroom = None
         self.classroom = new_classroom
         self.save()
-        
 
     def __str__(self):
         return f"{self.full_name} - {self.age} ani" or f"Child {self.id}"
 
 
 DAYS_MAP = {
-    "Mon": 0, "Tue": 1, "Wed": 2,
-    "Thu": 3, "Fri": 4, "Sat": 5, "Sun": 6,
+    "Mon": 0,
+    "Tue": 1,
+    "Wed": 2,
+    "Thu": 3,
+    "Fri": 4,
+    "Sat": 5,
+    "Sun": 6,
 }
+
 
 class ScheduleDay(models.TextChoices):
     MON = "Mon", "Monday"
@@ -104,31 +117,29 @@ class ScheduleDay(models.TextChoices):
     SAT = "Sat", "Saturday"
     SUN = "Sun", "Sunday"
 
+
 class ClassroomType(models.TextChoices):
     RO = "RO", "Română"
     ENG = "ENG", "Engleză"
     RO_EN = "RO/EN", "Română/Engleză"
-    
-    
+
+
 class Classroom(models.Model):
-    
+
     titlu = models.CharField(
         max_length=150,
         choices=ClassroomSubjects,
         default=ClassroomSubjects.M1,
     )
     teacher = models.ForeignKey(
-        TeacherProfile,
-        on_delete=models.CASCADE,
-        related_name="classrooms",
-        blank=True
+        TeacherProfile, on_delete=models.CASCADE, related_name="classrooms", blank=True
     )
     schedule_day = models.CharField(
         max_length=3,
-        choices=ScheduleDay.choices,  
+        choices=ScheduleDay.choices,
         default=ScheduleDay.MON,
     )
-    classroom_type = models.CharField(choices= ClassroomType, default=ClassroomType.RO)
+    classroom_type = models.CharField(choices=ClassroomType, default=ClassroomType.RO)
     schedule_time = models.TimeField()
     whiteboard_files = models.JSONField(default=list, blank=True)
     is_canceled = models.BooleanField(default=False)
@@ -136,8 +147,6 @@ class Classroom(models.Model):
     class Meta:
         verbose_name = "Classroom"
         verbose_name_plural = "Classrooms"
-        
-    
 
     def __str__(self):
         return f"Classroom {self.id} - {self.titlu} - {self.schedule_day} - {self.schedule_time} - {self.teacher.user.username}"
@@ -153,21 +162,16 @@ class Lesson(models.Model):
     is_canceled = models.BooleanField(default=False)
     is_makeup = models.BooleanField(default=False)
     makeup_students = models.ManyToManyField(
-        'ChildProfile', 
-        blank=True, 
-        null=True,
-        related_name="individual_makeup_lessons"
+        "ChildProfile", blank=True, null=True, related_name="individual_makeup_lessons"
     )
-    
-    channel_name = models.CharField(max_length=255, unique=True, blank=True, null=True )
-    whiteboard_uuid = models.CharField(max_length=255,unique=True, blank=True, null=True)
+    channel_name = models.CharField(max_length=255, unique=True, blank=True, null=True)
+    whiteboard_uuid = models.CharField(
+        max_length=255, unique=True, blank=True, null=True
+    )
     present_students = models.ManyToManyField(
-        'ChildProfile', 
-        blank=True, 
-        related_name='attended_lessons',
-        null=True
+        "ChildProfile", blank=True, related_name="attended_lessons", null=True
     )
-    skipped_by = models.ManyToManyField(          
+    skipped_by = models.ManyToManyField(
         "ChildProfile",
         related_name="skipped_lessons",
         blank=True,
@@ -179,14 +183,14 @@ class Lesson(models.Model):
     class Meta:
         verbose_name = "Lesson"
         verbose_name_plural = "Lessons"
-        
+
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        
+
         if not self.channel_name:
             self.channel_name = f"lesson_{self.id}_{self.classroom.id}"
-            super().save(update_fields=['channel_name'])
-        
+            super().save(update_fields=["channel_name"])
+
     def cancel_and_reschedule(self, new_datetime):
         self.is_canceled = True
         self.save()
@@ -195,20 +199,18 @@ class Lesson(models.Model):
             date_time=new_datetime,
             is_canceled=False,
         )
-    
 
     def __str__(self):
         return f"Lesson {self.id} - {self.date_time}"
 
+
 class TeacherAvailability(models.Model):
     teacher = models.ForeignKey(
-        'TeacherProfile', 
-        on_delete=models.CASCADE, 
-        related_name="availabilities"
+        "TeacherProfile", on_delete=models.CASCADE, related_name="availabilities"
     )
     day = models.CharField(
         max_length=3,
-        choices=ScheduleDay.choices, 
+        choices=ScheduleDay.choices,
     )
     start_time = models.TimeField()
     end_time = models.TimeField()
@@ -222,23 +224,19 @@ class TeacherAvailability(models.Model):
 
 
 class TestResult(models.Model):
-    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='test_results')
-    child = models.ForeignKey('ChildProfile', on_delete=models.CASCADE, related_name='test_results')
-    child_answer = models.JSONField(default=dict) 
+    lesson = models.ForeignKey(
+        Lesson, on_delete=models.CASCADE, related_name="test_results"
+    )
+    child = models.ForeignKey(
+        "ChildProfile", on_delete=models.CASCADE, related_name="test_results"
+    )
+    child_answer = models.JSONField(default=dict)
     score = models.FloatField(null=True, blank=True)
     submitted_at = models.DateTimeField(auto_now_add=True)
-    
+
     class Meta:
         verbose_name = "TestResult"
         verbose_name_plural = "Test Results"
-        
+
     def __str__(self):
         return f"Rezultat {self.child.full_name} - Lecția {self.lesson.id} - Scor: {self.score}%"
-    
-class TestAttempt(models.Model):
-    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE)
-    student = models.ForeignKey(User, on_delete=models.CASCADE)
-    answers_summary = models.JSONField() 
-    score = models.FloatField()
-    completed_at = models.DateTimeField(auto_now_add=True)
-

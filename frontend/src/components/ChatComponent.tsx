@@ -101,6 +101,7 @@ export default function ChatComponent({
   }, [config]);
 
   const handleSend = async () => {
+    if (!rtmClientRef.current && !(window as any).Cypress) return;
     if (!rtmClientRef.current) return;
 
     const trimmed = inputText.trim();

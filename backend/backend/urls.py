@@ -163,6 +163,6 @@ urlpatterns = [
     path(
         "api/glitch/chat/",
         GlitchChatView.as_view(),
-        name="consume-credit",
+        name="use-glitch",
     ),
 ]

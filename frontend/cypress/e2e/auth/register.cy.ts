@@ -56,25 +56,30 @@ describe("Fluxul de Înregistrare (Register)", () => {
       );
   });
 
-  it("3. Ar trebui să valideze formatul de email și număr de telefon", () => {
+  it("3. Ar trebui să valideze formatul de email și număr de telefon secvențial", () => {
     cy.get('[data-cy="nameField"]').type("Popescu");
     cy.get('[data-cy="surnameField"]').type("Ion");
     cy.get('[data-cy="usernameField"]').type("ionpopescu");
     cy.get('[data-cy="passwordField"]').type("ParolaMea123!");
 
-    // Introducem email și telefon invalide
+    // Introducem ambele greșite
     cy.get('[data-cy="emailField"]').type("email_fara_aron_si_domeniu");
     cy.get('[data-cy="phoneField"]').type("123");
-
     cy.get('[data-cy="submitButton"]').click();
 
+    // 1. Verificăm prima eroare care apare (cea de telefon)
+    cy.get('[data-cy="phone-error"]') // SAU unde se afișează textul roșu jos
+      .should("be.visible")
+      .and("contain", "Format incorect. Exemplu: +40712345678");
+
+    // 2. Corectăm telefonul ca să forțăm aplicația să treacă la validarea de email
+    cy.get('[data-cy="phoneField"]').clear().type("+40712345678");
+    cy.get('[data-cy="submitButton"]').click();
+
+    // 3. Acum verificăm că a apărut eroarea de email
     cy.get('[data-cy="email-error"]')
       .should("be.visible")
       .and("contain", "Formatul email-ului este invalid.");
-
-    cy.get('[data-cy="phone-error"]')
-      .should("be.visible")
-      .and("contain", "Număr de telefon invalid.");
   });
 
   it("4. Ar trebui să valideze complexitatea parolei", () => {
