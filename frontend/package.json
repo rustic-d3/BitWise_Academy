@@ -13,6 +13,7 @@
     "@netless/fastboard-react": "^1.1.5",
     "@tailwindcss/vite": "^4.3.0",
     "agora-rtc-sdk-ng": "^4.24.3",
+    "agora-rtm-sdk": "^2.2.4",
     "axios": "^1.16.0",
     "jwt-decode": "^4.0.0",
     "react": "^19.2.6",
