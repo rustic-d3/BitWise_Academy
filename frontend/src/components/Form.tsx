@@ -227,7 +227,7 @@ export default function Form({ form_type, route }: FormProps) {
             <input
               type="tel"
               placeholder="+40712345678"
-              maxLength={13} // ← +40 + 9 cifre = 13 caractere
+              maxLength={12} // ← +40 + 8 cifre = 13 caractere
               value={formData.phone_number}
               onChange={(e) => {
                 let value = e.target.value.replace(/[^0-9+]/g, ""); // doar cifre și +
