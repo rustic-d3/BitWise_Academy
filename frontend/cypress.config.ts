@@ -1,6 +1,7 @@
 import { defineConfig } from "cypress";
 
 export default defineConfig({
+  projectId: '64we4r',
   allowCypressEnv: false,
 
   e2e: {
